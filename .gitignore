@@ -268,4 +268,4 @@ cython_debug/
 #.idea/
 
 # db 보호를 위해
-alembic.ini
+/alembic.ini
