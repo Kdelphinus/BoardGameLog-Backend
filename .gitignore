@@ -267,4 +267,5 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-alembic.ini  # db 보호를 위해
+# db 보호를 위해
+alembic.ini
