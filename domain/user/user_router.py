@@ -22,15 +22,15 @@ router = APIRouter(prefix="/api/user")
 
 
 @router.post("/create", status_code=status.HTTP_204_NO_CONTENT)
-async def user_create(
-    _user_create: user_schema.UserCreate, db: AsyncSession = Depends(get_db)
+async def create_user(
+    _user_info: user_schema.UserCreate, db: AsyncSession = Depends(get_db)
 ):
-    user = await user_crud.get_existing_user(db, user_create=_user_create)
+    user = await user_crud.get_existing_user(db, user_info=_user_info)
     if user:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="이미 존재하는 사용자입니다."
         )
-    await user_crud.create_user(db=db, user_create=_user_create)
+    await user_crud.create_user(db=db, user_info=_user_info)
 
 
 @router.post("/login", response_model=user_schema.Token)

@@ -2,6 +2,12 @@ from pydantic import BaseModel, field_validator, EmailStr
 from pydantic_core.core_schema import FieldValidationInfo
 
 
+class User(BaseModel):
+    id: int
+    name: str
+    email: str
+
+
 class UserCreate(BaseModel):
     name: str
     password: str
@@ -9,13 +15,13 @@ class UserCreate(BaseModel):
     email: EmailStr
 
     @field_validator("name", "password", "check_password", "email")
-    def not_empty(cls, v):
+    def not_empty(cls, v: str) -> str:
         if not v or not v.strip():
             raise ValueError("빈 값은 허용되지 않습니다.")
         return v
 
     @field_validator("check_password")
-    def password_match(cls, v, info: FieldValidationInfo):
+    def password_match(cls, v: str, info: FieldValidationInfo) -> str:
         if "password" in info.data and v != info.data["password"]:
             raise ValueError("비밀번호가 일치하지 않습니다.")
         return v
@@ -26,9 +32,3 @@ class Token(BaseModel):
     access_token: str
     token_type: str
     name: str
-
-
-class User(BaseModel):
-    id: int
-    name: str
-    email: str
