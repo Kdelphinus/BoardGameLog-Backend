@@ -21,7 +21,8 @@ class Game(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     weight = Column(Float, nullable=False)
-    possible_num = Column(Integer, nullable=False)
+    min_possible_num = Column(Integer, nullable=False)
+    max_possible_num = Column(Integer, nullable=False)
 
     logs = relationship("GameLog", back_populates="game")
 
