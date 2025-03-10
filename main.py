@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 
 from domain.game import game_router
 from domain.user import user_router
+from domain.gamelog import gamelog_router
 
 app = FastAPI()
 load_dotenv()
@@ -23,3 +24,4 @@ app.add_middleware(
 
 app.include_router(user_router.router)
 app.include_router(game_router.router)
+app.include_router(gamelog_router.router)
