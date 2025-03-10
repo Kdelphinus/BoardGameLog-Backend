@@ -1,6 +1,8 @@
 from pydantic import BaseModel, field_validator, EmailStr
 from pydantic_core.core_schema import FieldValidationInfo
 
+from app.core.exceptions import NotAcceptableException
+
 
 class User(BaseModel):
     id: int
@@ -17,18 +19,21 @@ class UserCreate(BaseModel):
     @field_validator("name", "password", "check_password", "email")
     def not_empty(cls, v: str) -> str:
         if not v or not v.strip():
-            raise ValueError("빈 값은 허용되지 않습니다.")
+            raise NotAcceptableException("Empty values are not allowed.")
         return v
 
     @field_validator("check_password")
     def password_match(cls, v: str, info: FieldValidationInfo) -> str:
         if "password" in info.data and v != info.data["password"]:
-            raise ValueError("비밀번호가 일치하지 않습니다.")
+            raise NotAcceptableException("Password does not match.")
         return v
 
 
-# 로그인 API의 출력항목에 해당하는 스키마
 class Token(BaseModel):
+    """
+    로그인 API의 출력항목에 해당하는 스키마
+    """
+
     access_token: str
     token_type: str
     name: str
