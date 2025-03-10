@@ -87,3 +87,9 @@ async def get_current_user(
         if user is None:
             raise credentials_exception
         return user
+
+
+# TODO 개발을 위한 임시 API
+@router.get("/list/all", status_code=status.HTTP_200_OK)
+async def get_all_user(db: AsyncSession = Depends(get_db)):
+    return await user_crud.get_all_user(db)

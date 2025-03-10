@@ -35,3 +35,9 @@ async def get_existing_user(db: AsyncSession, user_info: UserCreate):
 async def get_user(db: AsyncSession, name: str):
     result = await db.execute(select(User).where(User.name == name))
     return result.scalars().first()
+
+
+# TODO 개발을 위한 임시 함수
+async def get_all_user(db: AsyncSession):
+    results = await db.execute(select(User))
+    return results.scalars().all()
