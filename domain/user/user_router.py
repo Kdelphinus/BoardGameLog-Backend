@@ -16,9 +16,11 @@ load_dotenv()
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 토큰 유효기간, 분 단위 설정
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"  # 토큰 생성 시 사용하는 알고리즘
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/user/login")
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl=f"/api/{os.getenv("API_VERSION")}/user/login"
+)
 
-router = APIRouter(prefix="/api/user")
+router = APIRouter(prefix=f"/api/{os.getenv("API_VERSION")}/user")
 
 
 @router.post("/create", status_code=status.HTTP_204_NO_CONTENT)
