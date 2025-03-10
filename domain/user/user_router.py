@@ -27,6 +27,9 @@ router = APIRouter(prefix=f"/api/{os.getenv("API_VERSION")}/user")
 async def create_user(
     _user_info: user_schema.UserCreate, db: AsyncSession = Depends(get_db)
 ):
+    """
+    유저를 만드는 함수
+    """
     user = await user_crud.get_existing_user(db, user_info=_user_info)
     if user:
         raise HTTPException(
@@ -39,6 +42,9 @@ async def create_user(
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
 ):
+    """
+    로그인을 위한 액세스 토큰을 발급하느 함수
+    """
     # check user and password
     user = await user_crud.get_user(db, form_data.username)
     # verify 함수는 암호화되지 않은 비밀번호를 암호화하여 데이터베이스와 일치하는지 확인하는 함수
@@ -62,11 +68,13 @@ async def login_for_access_token(
     }
 
 
-# 헤더 정보의 토큰값을 읽어 사용자 객체를 리턴하는 함수
 # 매개변수로 사용한 토큰값은 OAuth2PasswordBearer에 의해 자동으로 매핑된다.
 async def get_current_user(
     token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
 ):
+    """
+    헤더 정보의 토큰값을 읽어 현재 사용자 객체를 반환하는 함수
+    """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
