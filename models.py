@@ -34,9 +34,10 @@ class GameLog(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     game_id = Column(Integer, ForeignKey("games.id", ondelete="CASCADE"))
     date = Column(DateTime, nullable=False)
-    during_time = Column(Integer)
-    participant_num = Column(Integer)
-    text_data = Column(Text)
+    during_time = Column(Integer, nullable=False)
+    participant_num = Column(Integer, nullable=False)
+    subject = Column(String, nullable=False)
+    content = Column(Text)
     picture = Column(String)
 
     user = relationship("User", back_populates="played_the_games")
