@@ -1,7 +1,6 @@
-from fastapi import HTTPException
-
-from models import Game
-from domain.gamelog.gamelog_schema import GameLogCreate
+from app.core.exceptions import UnprocessableEntityException
+from app.models.game import Game
+from app.schemas.game_log import GameLogCreate
 
 
 async def validate_participant_num(game: Game, game_log_info: GameLogCreate) -> None:
@@ -9,7 +8,6 @@ async def validate_participant_num(game: Game, game_log_info: GameLogCreate) -> 
         game_log_info.participant_num < game.min_possible_num
         or game_log_info.participant_num > game.max_possible_num
     ):
-        raise HTTPException(
-            status_code=422,
+        raise UnprocessableEntityException(
             detail="Participant_num must between min_possible_num and max_possible_num.",
         )
