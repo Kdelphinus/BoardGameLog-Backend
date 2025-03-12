@@ -21,7 +21,9 @@ async def is_existing_user(db: AsyncSession, name: str, email: str = None):
     return user
 
 
-async def is_not_existing_user(db: AsyncSession, name: str, email: str = None):
+async def is_not_existing_user(
+    db: AsyncSession, name: str = None, email: str = None
+) -> None:
     """
     db에 없는 사용자인지 확인하는 함수
     Args:
