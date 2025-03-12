@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -53,3 +55,24 @@ async def get_user_in_db(db: AsyncSession, name: str = None, email: EmailStr = N
     else:
         result = await db.execute(select(User).where(User.email == email))
     return result.scalars().first()
+
+
+async def update_user_in_db(
+    db: AsyncSession, user: User, update_data: dict[str, Any]
+) -> User:
+    """
+    db에 있는 사용자의 정보를 수정하는 함수
+    Args:
+        db: AsyncSession
+        user: 변경할 사용자
+        update_data: 변경할 내용이 담긴 딕셔너리
+
+    Returns:
+        주어진 정보로 데이터를 수정한 사용자
+    """
+    for key, value in update_data.items():
+        setattr(user, key, value)
+
+    await db.commit()
+    await db.refresh(user)
+    return user
