@@ -13,7 +13,7 @@ from app.models.user import User
 router = APIRouter()
 
 
-@router.post("/create", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/create", status_code=status.HTTP_201_CREATED)
 async def create_user(_user_info: UserCreate, db: AsyncSession = Depends(get_db)):
     """
     사용자를 생성하는 API
