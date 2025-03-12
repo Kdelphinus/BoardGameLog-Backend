@@ -34,6 +34,11 @@ async def login_for_access_token(
     return await verify_user(form_data, db)
 
 
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout_for_access_token(db: AsyncSession = Depends(get_db)):
+    pass
+
+
 @router.get("/list/me", status_code=status.HTTP_200_OK)
 async def get_current_user(
     current_user: User = Depends(get_current_user_in_db),
