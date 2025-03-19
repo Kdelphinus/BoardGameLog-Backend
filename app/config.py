@@ -6,12 +6,23 @@ load_dotenv()
 
 
 class Settings(BaseSettings):
-    DATABASE_URL: str
-    SECRET_KEY: str
+    # app
     BASE_IP: str
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
-    ALGORITHM: str = "HS256"
     API_VERSION: str
+    SECRET_KEY: str
+
+    # db
+    DATABASE_URL: str
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_DB: str
+
+    # redis
+    REDIS_URL: str
+
+    # fastapi
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
 
     class Config:
         env_file = ".env"
