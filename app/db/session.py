@@ -18,3 +18,11 @@ async_engine = create_async_engine(settings.DATABASE_URL, echo=True)
 AsyncSessionLocal = sessionmaker(
     bind=async_engine, class_=AsyncSession, expire_on_commit=False
 )
+
+# redis 연결 객체
+RedisClient = Redis(
+    host=settings.REDIS_HOST,
+    port=settings.REDIS_PORT,
+    db=settings.REDIS_DATABASE,
+    decode_responses=True,  # 문자열(utf-8)로 자동 변환 / 기본값은 바이트 형태
+)
