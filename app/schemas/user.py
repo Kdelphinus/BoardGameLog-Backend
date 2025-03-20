@@ -34,11 +34,13 @@ class UserUpdate(BaseModel):
     email: Optional[str] = None
 
 
-class Token(BaseModel):
-    """
-    로그인 API의 출력항목에 해당하는 스키마
-    """
-
+class AccessToken(BaseModel):
     access_token: str
+    refresh_token: str
     token_type: str
     name: str
+
+
+class RefreshToken(BaseModel):
+    access_token: str
+    token_type: str
