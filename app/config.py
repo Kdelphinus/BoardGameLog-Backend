@@ -18,19 +18,28 @@ class Settings(BaseSettings):
     POSTGRES_DB: str
 
     # redis
-    REDIS_URL: str
+    REDIS_HOST: str
+    REDIS_PORT: int
+    REDIS_DATABASE: int
 
     # fastapi
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_MINUTES: int = 10080  # 7일
 
     class Config:
         env_file = ".env"
 
 
 settings = Settings(
-    DATABASE_URL=os.getenv("DATABASE_URL"),
-    SECRET_KEY=os.getenv("SECRET_KEY"),
     BASE_IP=os.getenv("BASE_IP"),
     API_VERSION=os.getenv("API_VERSION"),
+    SECRET_KEY=os.getenv("SECRET_KEY"),
+    DATABASE_URL=os.getenv("DATABASE_URL"),
+    POSTGRES_USER=os.getenv("POSTGRES_USER"),
+    POSTGRES_PASSWORD=os.getenv("POSTGRES_PASSWORD"),
+    POSTGRES_DB=os.getenv("POSTGRES_DB"),
+    REDIS_HOST=os.getenv("REDIS_HOST"),
+    REDIS_PORT=int(os.getenv("REDIS_PORT")),
+    REDIS_DATABASE=int(os.getenv("REDIS_DATABASE")),
 )
