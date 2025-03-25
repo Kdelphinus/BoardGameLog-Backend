@@ -1,5 +1,5 @@
 import os
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -27,8 +27,16 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 10080  # 7일
 
-    class Config:
-        env_file = ".env"
+    # test
+    TEST_DATABASE_URL: str
+
+    model_config = SettingsConfigDict(
+        env_file=".env",  # .env 파일 경로 지정
+        env_file_encoding="utf-8",  # 환경 변수 파일 값을 우선
+        # 추가 옵션
+        extra="ignore",  # 정의되지 않은 환경 변수 무시
+        case_sensitive=True,  # 환경 변수 대소문자 구분
+    )
 
 
 settings = Settings(
@@ -42,4 +50,5 @@ settings = Settings(
     REDIS_HOST=os.getenv("REDIS_HOST"),
     REDIS_PORT=int(os.getenv("REDIS_PORT")),
     REDIS_DATABASE=int(os.getenv("REDIS_DATABASE")),
+    TEST_DATABASE_URL=os.getenv("TEST_DATABASE_URL"),
 )

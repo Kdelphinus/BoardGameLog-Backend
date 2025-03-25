@@ -1,5 +1,5 @@
 from pydantic import BaseModel, field_validator, EmailStr
-from pydantic_core.core_schema import FieldValidationInfo
+from pydantic_core.core_schema import ValidationInfo
 from typing import Optional
 
 from app.core.exceptions import NotAcceptableException
@@ -24,7 +24,7 @@ class UserCreate(BaseModel):
         return v
 
     @field_validator("check_password")
-    def password_match(cls, v: str, info: FieldValidationInfo) -> str:
+    def password_match(cls, v: str, info: ValidationInfo) -> str:
         if "password" in info.data and v != info.data["password"]:
             raise NotAcceptableException("Password does not match.")
         return v
