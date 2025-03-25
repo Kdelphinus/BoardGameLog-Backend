@@ -162,6 +162,53 @@ async def delete_token(redis_db: Redis, token: str = Depends(oauth2_scheme)):
         raise CredentialsException(detail="Invalid token")
 
 
+async def send_reset_password_email(name: str, email: str):
+    """
+    비밀번호 재설정 링크를 보내는 함수
+    Args:
+        name: 사용자의 이름
+        email: 사용자의 이메일
+
+    Returns:
+        추후 -> 이메일을 발송했다는 메시지
+        현재 -> reset token
+    """
+    reset_token = create_token(expire_time=30, user_name=name)
+
+    # TODO 프론트 url 연결 해야 함
+    # reset_link = f"https://homageurl.com/reset-password?token={reset_token}"
+    # await send_email(email=email, "Reset your password", f"Click the link: {reset_link}")
+    # return {"message": "Password reset email sent"}
+
+    # TODO email 기능 전 임시 반환 값
+    return {
+        "reset token": reset_token,
+        "token_type": "bearer",
+        "name": name,
+    }
+
+
+async def reset_password(token: str, new_password: str, db: AsyncSession):
+    from app.crud.user import (
+        get_user_in_db,
+        update_user_in_db,
+    )  # 순환 참조를 막기 위한 지연 참조
+
+    try:
+        username, _ = await decode_token(token)
+        user = await get_user_in_db(db=db, name=username)
+        if not user:
+            raise CredentialsException()
+        update_data = {"password": pwd_context.hash(new_password)}
+        await update_user_in_db(db=db, user=user, update_data=update_data)
+
+        return {"message": "Password has been reset"}
+    except jwt.ExpiredSignatureError:
+        raise CredentialsException(detail="Refresh token has expired")
+    except jwt.InvalidTokenError:
+        raise CredentialsException(detail="Invalid refresh token")
+
+
 # 매개변수로 사용한 토큰값은 OAuth2PasswordBearer에 의해 자동으로 매핑된다.
 async def get_current_user_in_db(
     token: str = Depends(oauth2_scheme),

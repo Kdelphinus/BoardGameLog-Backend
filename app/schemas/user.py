@@ -8,7 +8,7 @@ from app.core.exceptions import NotAcceptableException
 class User(BaseModel):
     id: int
     name: str
-    email: str
+    email: EmailStr
 
 
 class UserCreate(BaseModel):
@@ -44,3 +44,12 @@ class AccessToken(BaseModel):
 class RefreshToken(BaseModel):
     access_token: str
     token_type: str
+
+
+class PasswordResetRequest(BaseModel):
+    name: str
+
+
+class PasswordResetConfirm(BaseModel):
+    token: str
+    new_password: str

@@ -6,12 +6,21 @@ from redis.asyncio import Redis
 from app.api.dependencies import get_db, get_redis
 from app.core.exceptions import NotAcceptableException
 from app.crud.user import create_user_in_db, get_user_in_db, update_user_in_db
-from app.schemas.user import UserCreate, AccessToken, UserUpdate, RefreshToken
+from app.schemas.user import (
+    UserCreate,
+    AccessToken,
+    UserUpdate,
+    RefreshToken,
+    PasswordResetRequest,
+    PasswordResetConfirm,
+)
 from app.core.security import (
     issue_access_token,
     reissue_access_token,
     delete_token,
     get_current_user_in_db,
+    send_reset_password_email,
+    reset_password,
 )
 from app.services.user import is_existing_user, is_not_existing_user
 from app.models.user import User
@@ -68,7 +77,46 @@ async def refresh(refresh_token: str, redis_db: Redis = Depends(get_redis)):
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 async def logout(redis_db: Redis = Depends(get_redis)):
+    """
+    액세스 토큰을 블랙리스트에 올리고, 리프레시 토큰을 삭제하는 API
+    Args:
+        redis_db: redis db
+    """
     return await delete_token(redis_db=redis_db)
+
+
+@router.post("/reset-password", status_code=status.HTTP_200_OK)
+async def request_reset_password(
+    data: PasswordResetRequest, db: AsyncSession = Depends(get_db)
+):
+    """
+    비밀번호 재설정을 요청하는 API
+    Args:
+        data: 변경하고자 하는 사용자의 이름이 담긴 데이터
+        db: AsyncSession
+
+    Returns:
+        최종 -> 이메일 발송 여부
+        현재 -> reset token
+    """
+    user: User = await is_existing_user(db=db, name=data.name)
+    return await send_reset_password_email(name=user.name, email=user.email)
+
+
+@router.post("/reset-password/confirm", status_code=status.HTTP_200_OK)
+async def confirm_reset_password(
+    data: PasswordResetConfirm, db: AsyncSession = Depends(get_db)
+):
+    """
+    비밀번호 재설정을 승인하는 API
+    Args:
+        data: 변경 권한을 가진 토큰과 새로운 비밀번호가 담긴 데이터
+        db: AsyncSession
+
+    Returns:
+        변경 완료 메시지
+    """
+    return reset_password(token=data.token, new_password=data.new_password, db=db)
 
 
 @router.get("/list/me", status_code=status.HTTP_200_OK)
