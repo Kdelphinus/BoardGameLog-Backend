@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from redis.asyncio import Redis
@@ -62,27 +62,38 @@ async def login(
 
 
 @router.post("/refresh", response_model=RefreshToken)
-async def refresh(refresh_token: str, redis_db: Redis = Depends(get_redis)):
+async def refresh(request: Request, redis_db: Redis = Depends(get_redis)):
     """
     리프레시 토큰을 이용해 새로운 액세스 토큰을 발급하는 API
     Args:
-        refresh_token: 기존 리프레시 토큰
+        request: Request
         redis_db: redis db
 
     Returns:
         새로운 액세스 토큰
     """
+    authorization = request.headers.get("Authorization")
+    if not authorization or not authorization.startswith("Bearer "):
+        raise CredentialsException(detail="Invalid authorization header")
+
+    refresh_token = authorization.split(" ")[1]
     return await reissue_access_token(refresh_token=refresh_token, redis_db=redis_db)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
-async def logout(redis_db: Redis = Depends(get_redis)):
+async def logout(request: Request, redis_db: Redis = Depends(get_redis)):
     """
     액세스 토큰을 블랙리스트에 올리고, 리프레시 토큰을 삭제하는 API
     Args:
+        request: Request
         redis_db: redis db
     """
-    return await delete_token(redis_db=redis_db)
+    authorization = request.headers.get("Authorization")
+    if not authorization or not authorization.startswith("Bearer "):
+        raise CredentialsException(detail="Invalid authorization header")
+
+    access_token = authorization.split(" ")[1]
+    return await delete_token(redis_db=redis_db, token=access_token)
 
 
 @router.post("/reset-password", status_code=status.HTTP_200_OK)

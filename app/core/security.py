@@ -139,7 +139,7 @@ async def reissue_access_token(refresh_token: str, redis_db: Redis):
     return {"access_token": new_access_token, "token_type": "bearer"}
 
 
-async def delete_token(redis_db: Redis, token: str = Depends(oauth2_scheme)):
+async def delete_token(redis_db: Redis, token: str):
     """
     액세스 토큰을 무효화하고, 리프레시 토큰을 삭제하는 함수
     Args:
