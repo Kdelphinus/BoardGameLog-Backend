@@ -187,3 +187,6 @@ async def update_user(
         await is_not_existing_user(db, email=update_data["email"])
 
     return await update_user_in_db(db, user=current_user, update_data=update_data)
+
+
+# TODO delete 기능 만들어야 함
