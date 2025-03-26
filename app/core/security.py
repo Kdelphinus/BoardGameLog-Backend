@@ -51,15 +51,20 @@ async def decode_token(token: str, detail: str = "Invalid token") -> (str, float
     Returns:
         토큰 주인의 이름, 토큰 만료 기간
     """
-    payload = jwt.decode(
-        jwt=token,
-        key=settings.SECRET_KEY,
-        algorithms=[settings.ALGORITHM],
-        options={"verify_exp": True},
-    )
-    username: str = payload.get("sub")
-    if username is None:
-        raise CredentialsException(detail=detail)
+    try:
+        payload = jwt.decode(
+            jwt=token,
+            key=settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM],
+            options={"verify_exp": True},
+        )
+        username: str = payload.get("sub")
+        if username is None:
+            raise CredentialsException(detail=detail)
+    except jwt.ExpiredSignatureError:
+        raise CredentialsException(detail="Refresh token has expired")
+    except jwt.InvalidTokenError:
+        raise CredentialsException(detail=f"Invalid token {token}")
 
     return username, payload["exp"]
 
@@ -117,26 +122,21 @@ async def reissue_access_token(refresh_token: str, redis_db: Redis):
     Returns:
         새로운 액세스 토큰
     """
-    try:
-        username, _ = await decode_token(
-            token=refresh_token, detail="Invalid refresh token"
-        )
+    username, _ = await decode_token(
+        token=refresh_token, detail="Invalid refresh token"
+    )
 
-        # refresh token 확인
-        stored_refresh_token = await redis_db.get(f"refresh:{username}")
-        if stored_refresh_token != refresh_token:
-            raise CredentialsException(detail="Invalid refresh token")
-
-        # 새로운 액세스 토큰 발급
-        new_access_token = await create_token(
-            expire_time=settings.ACCESS_TOKEN_EXPIRE_MINUTES, user_name=username
-        )
-
-        return {"access_token": new_access_token, "token_type": "bearer"}
-    except jwt.ExpiredSignatureError:
-        raise CredentialsException(detail="Refresh token has expired")
-    except jwt.InvalidTokenError:
+    # refresh token 확인
+    stored_refresh_token = await redis_db.get(f"refresh:{username}")
+    if stored_refresh_token != refresh_token:
         raise CredentialsException(detail="Invalid refresh token")
+
+    # 새로운 액세스 토큰 발급
+    new_access_token = await create_token(
+        expire_time=settings.ACCESS_TOKEN_EXPIRE_MINUTES, user_name=username
+    )
+
+    return {"access_token": new_access_token, "token_type": "bearer"}
 
 
 async def delete_token(redis_db: Redis, token: str = Depends(oauth2_scheme)):
@@ -151,15 +151,12 @@ async def delete_token(redis_db: Redis, token: str = Depends(oauth2_scheme)):
     """
     username, exp = await decode_token(token=token)
 
-    try:
-        await redis_db.delete(f"refresh:{username}")
-        remaining_time = exp - datetime.now(timezone.utc).timestamp()
-        if remaining_time > 0:
-            await redis_db.setex(f"blacklist:{token}", remaining_time, "true")
+    await redis_db.delete(f"refresh:{username}")
+    remaining_time = exp - datetime.now(timezone.utc).timestamp()
+    if remaining_time > 0:
+        await redis_db.setex(f"blacklist:{token}", int(remaining_time), "true")
 
-        return {"message": "Successfully logged out"}
-    except jwt.InvalidTokenError:
-        raise CredentialsException(detail="Invalid token")
+    return {"message": "Successfully logged out"}
 
 
 async def send_reset_password_email(name: str, email: str):
@@ -194,19 +191,14 @@ async def reset_password(token: str, new_password: str, db: AsyncSession):
         update_user_in_db,
     )  # 순환 참조를 막기 위한 지연 참조
 
-    try:
-        username, _ = await decode_token(token)
-        user = await get_user_in_db(db=db, name=username)
-        if not user:
-            raise CredentialsException()
-        update_data = {"password": pwd_context.hash(new_password)}
-        await update_user_in_db(db=db, user=user, update_data=update_data)
+    username, _ = await decode_token(token)
+    user = await get_user_in_db(db=db, name=username)
+    if not user:
+        raise CredentialsException()
+    update_data = {"password": pwd_context.hash(new_password)}
+    await update_user_in_db(db=db, user=user, update_data=update_data)
 
-        return {"message": "Password has been reset"}
-    except jwt.ExpiredSignatureError:
-        raise CredentialsException(detail="Refresh token has expired")
-    except jwt.InvalidTokenError:
-        raise CredentialsException(detail="Invalid refresh token")
+    return {"message": "Password has been reset"}
 
 
 # 매개변수로 사용한 토큰값은 OAuth2PasswordBearer에 의해 자동으로 매핑된다.
@@ -227,21 +219,15 @@ async def get_current_user_in_db(
     """
     from app.crud.user import get_user_in_db  # 순환 참조를 막기 위한 지연 참조
 
-    try:
-        # 이미 무효화 된 토큰인지 확인
-        if await redis_db.get(f"blacklist:{token}"):
-            raise CredentialsException("Token has been revoked")
+    # 이미 무효화 된 토큰인지 확인
+    if await redis_db.get(f"blacklist:{token}"):
+        raise CredentialsException("Token has been revoked")
 
-        # 토큰을 복호화하여 토큰에 담겨 있는 사용자명을 얻기 위함
-        username, _ = await decode_token(
-            token=token, detail="Invalid authentication credentials: username not found"
-        )
-    except jwt.ExpiredSignatureError:
-        raise CredentialsException(detail="Token has expired")
-    except jwt.InvalidTokenError:
-        raise CredentialsException(detail="Invalid token")
-    else:  # db 동작 중 발생하는 에러와 jwt 에러를 구분하기 위해 else문 사용
-        user = await get_user_in_db(db, name=username)
-        if user is None:
-            raise CredentialsException()
-        return user
+    # 토큰을 복호화하여 토큰에 담겨 있는 사용자명을 얻기 위함
+    username, _ = await decode_token(
+        token=token, detail="Invalid authentication credentials: username not found"
+    )
+    user = await get_user_in_db(db, name=username)
+    if user is None:
+        raise CredentialsException()
+    return user
