@@ -2,11 +2,13 @@ from fastapi import APIRouter, Depends, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from redis.asyncio import Redis
+from typing import List
 
 from app.api.dependencies import get_db, get_redis
-from app.core.exceptions import NotAcceptableException
+from app.core.exceptions import NotAcceptableException, CredentialsException
 from app.crud.user import create_user_in_db, get_user_in_db, update_user_in_db
 from app.schemas.user import (
+    UserResponse,
     UserCreate,
     AccessToken,
     UserUpdate,
@@ -130,7 +132,7 @@ async def confirm_reset_password(
     return reset_password(token=data.token, new_password=data.new_password, db=db)
 
 
-@router.get("/list/me", status_code=status.HTTP_200_OK)
+@router.get("/list/me", status_code=status.HTTP_200_OK, response_model=UserResponse)
 async def get_current_user(
     current_user: User = Depends(get_current_user_in_db),
 ):
@@ -145,7 +147,9 @@ async def get_current_user(
     return current_user
 
 
-@router.get("/list/{user_name}", status_code=status.HTTP_200_OK)
+@router.get(
+    "/list/{user_name}", status_code=status.HTTP_200_OK, response_model=UserResponse
+)
 async def get_user(user_name: str, db: AsyncSession = Depends(get_db)):
     """
     특정 사용자 정보를 반환 하는 API
@@ -160,8 +164,7 @@ async def get_user(user_name: str, db: AsyncSession = Depends(get_db)):
     return user
 
 
-# TODO 개발을 위한 임시 API
-@router.get("/list", status_code=status.HTTP_200_OK)
+@router.get("/list", status_code=status.HTTP_200_OK, response_model=List[UserResponse])
 async def get_all_user(db: AsyncSession = Depends(get_db)):
     """
     사용자 전체 정보를 반환 하는 API
@@ -174,7 +177,7 @@ async def get_all_user(db: AsyncSession = Depends(get_db)):
     return await get_user_in_db(db)
 
 
-@router.patch("/patch", status_code=status.HTTP_200_OK)
+@router.patch("/patch", status_code=status.HTTP_200_OK, response_model=UserResponse)
 async def update_user(
     user_update: UserUpdate,
     current_user: User = Depends(get_current_user_in_db),

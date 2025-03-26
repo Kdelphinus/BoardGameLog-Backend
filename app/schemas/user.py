@@ -5,10 +5,19 @@ from typing import Optional
 from app.core.exceptions import NotAcceptableException
 
 
-class User(BaseModel):
+class UserData(BaseModel):
     id: int
     name: str
     email: EmailStr
+
+
+class UserResponse(BaseModel):
+    name: str
+    email: EmailStr
+
+    class Config:
+        orm_mode = True
+        exclude = {"id", "password"}
 
 
 class UserCreate(BaseModel):
