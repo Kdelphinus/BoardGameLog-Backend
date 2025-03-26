@@ -168,21 +168,13 @@ async def send_reset_password_email(name: str, email: str):
 
     Returns:
         추후 -> 이메일을 발송했다는 메시지
-        현재 -> reset token
     """
-    reset_token = create_token(expire_time=30, user_name=name)
+    reset_token = await create_token(expire_time=30, user_name=name)
 
     # TODO 프론트 url 연결 해야 함
-    # reset_link = f"https://homageurl.com/reset-password?token={reset_token}"
+    # reset_link = f"https://boardgamelog.com/reset-password?token={reset_token}"
     # await send_email(email=email, "Reset your password", f"Click the link: {reset_link}")
-    # return {"message": "Password reset email sent"}
-
-    # TODO email 기능 전 임시 반환 값
-    return {
-        "reset token": reset_token,
-        "token_type": "bearer",
-        "name": name,
-    }
+    return {"message": "Password reset email sent"}
 
 
 async def reset_password(token: str, new_password: str, db: AsyncSession):
