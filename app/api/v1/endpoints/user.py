@@ -5,8 +5,19 @@ from redis.asyncio import Redis
 from typing import List
 
 from app.api.dependencies import get_db, get_redis
-from app.core.exceptions import NotAcceptableException, CredentialsException
-from app.crud.user import create_user_in_db, get_user_in_db, update_user_in_db
+from app.config import settings
+from app.core.exceptions import (
+    NotAcceptableException,
+    CredentialsException,
+    UnprocessableEntityException,
+)
+from app.crud.user import (
+    create_user_in_db,
+    get_user_in_db,
+    update_user_in_db,
+    soft_delete_user_in_db,
+    hard_delete_user_in_db,
+)
 from app.schemas.user import (
     UserResponse,
     UserCreate,
@@ -15,6 +26,8 @@ from app.schemas.user import (
     RefreshToken,
     PasswordResetRequest,
     PasswordResetConfirm,
+    RestoreUserRequest,
+    RestoreUserConfirm,
 )
 from app.core.security import (
     issue_access_token,
@@ -23,6 +36,8 @@ from app.core.security import (
     get_current_user_in_db,
     send_reset_password_email,
     reset_password,
+    send_restore_email,
+    restore_user,
 )
 from app.services.user import is_existing_user, is_not_existing_user
 from app.models.user import User
@@ -145,6 +160,23 @@ async def get_current_user(
         현재 사용자의 정보
     """
     return current_user
+
+
+@router.get(
+    "/list/deactivate",
+    status_code=status.HTTP_200_OK,
+    response_model=List[UserResponse],
+)
+async def get_all_deactivate_user(db: AsyncSession = Depends(get_db)):
+    """
+    모든 비활성화된 사용자 정보를 반환 하는 API
+    Args:
+        db: AsyncSession
+
+    Returns:
+        db에 있는 모든 비활성화된 사용자의 정보
+    """
+    return await get_user_in_db(db, is_deleted=True)
 
 
 @router.get(
