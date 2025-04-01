@@ -53,7 +53,7 @@ async def create_user(_user_info: UserCreate, db: AsyncSession = Depends(get_db)
         _user_info: 생성할 사용자의 정보
         db: AsyncSession
     """
-    if _user_info.name.lower() == "all":
+    if _user_info.name.lower() == "all" or _user_info.name.lower() == "deactivate":
         raise NotAcceptableException(detail="Could not use this name")
     await is_not_existing_user(db=db, name=_user_info.name, email=_user_info.email)
     await create_user_in_db(db=db, user_info=_user_info)
@@ -231,6 +231,8 @@ async def update_user(
     # 이메일 또는 사용자 이름 업데이트 시 중복 확인
     if "email" in update_data and update_data["email"] is not None:
         await is_not_existing_user(db, email=update_data["email"])
+    else:  # 변경할 이메일이 없을 때
+        raise UnprocessableEntityException()
 
     return await update_user_in_db(db, user=current_user, update_data=update_data)
 
