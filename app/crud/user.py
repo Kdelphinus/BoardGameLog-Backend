@@ -1,4 +1,5 @@
 from typing import Any
+from datetime import datetime, timedelta
 
 from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -84,7 +85,7 @@ async def update_user_in_db(
         setattr(user, key, value)
 
     await db.commit()
-    await db.refresh(user)
+    await db.refresh(user)  # 방금 커밋된 최신 데이터를 다시 user 객체에 반영(동기화)
     return user
 
 

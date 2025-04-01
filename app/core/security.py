@@ -178,6 +178,16 @@ async def send_reset_password_email(name: str, email: str):
 
 
 async def reset_password(token: str, new_password: str, db: AsyncSession):
+    """
+    비밀번호를 재설정하는 함수
+    Args:
+        token: reset token
+        new_password: 새로운 비밀번호
+        db: AsyncSession
+
+    Returns:
+        비밀번호가 재설정되었다는 메시지
+    """
     from app.crud.user import (
         get_user_in_db,
         update_user_in_db,
