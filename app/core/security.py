@@ -193,6 +193,49 @@ async def reset_password(token: str, new_password: str, db: AsyncSession):
     return {"message": "Password has been reset"}
 
 
+async def send_restore_email(name: str, email: str):
+    """
+    휴면 사용자를 복구 하는 링크를 보내는 함수
+    Args:
+        name: 사용자의 이름
+        email: 사용자의 이메일
+
+    Returns:
+        이메일을 발송했다는 메시지
+    """
+    restore_token = await create_token(expire_time=30, user_name=name)
+
+    # TODO 프론트 url 연결 해야 함
+    # restore_link = f"https://boardgamelog.com/reset-password?token={restore_token}"
+    # await send_email(email=email, "Restore your account", f"Click the link: {restore_link}")
+    return {"message": "Restore email sent"}
+
+
+async def restore_user(token: str, db: AsyncSession):
+    """
+    휴면 사용자를 복구하는 함수
+    Args:
+        token: restore token
+        db: AsyncSession
+
+    Returns:
+        사용자가 복구되었다는 메시지
+    """
+    from app.crud.user import (
+        get_user_in_db,
+        update_user_in_db,
+    )  # 순환 참조를 막기 위한 지연 참조
+
+    username, _ = await decode_token(token)
+    user = await get_user_in_db(db=db, name=username)
+    if not user:
+        raise CredentialsException()
+    update_data = {"is_deleted": False, "deleted_at": None}
+    await update_user_in_db(db=db, user=user, update_data=update_data)
+
+    return {"message": f"{username} has been restored"}
+
+
 # 매개변수로 사용한 토큰값은 OAuth2PasswordBearer에 의해 자동으로 매핑된다.
 async def get_current_user_in_db(
     token: str = Depends(oauth2_scheme),

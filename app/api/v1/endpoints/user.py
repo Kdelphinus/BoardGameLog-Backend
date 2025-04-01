@@ -203,7 +203,63 @@ async def update_user(
     return await update_user_in_db(db, user=current_user, update_data=update_data)
 
 
-# TODO delete 기능 만들어야 함
+@router.patch("/deactivate", status_code=status.HTTP_204_NO_CONTENT)
+async def soft_delete_user(
+    request: Request,
+    redis_db: Redis = Depends(get_redis),
+    current_user: User = Depends(get_current_user_in_db),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    사용자를 soft delete 시키는 API
+    Args:
+        request: Request
+        redis_db: redis db
+        current_user: 현재 사용자
+        db: AsyncSession
+    """
+    await soft_delete_user_in_db(db, current_user)
+    authorization = request.headers.get("Authorization")
+    if not authorization or not authorization.startswith("Bearer "):
+        raise CredentialsException(detail="Invalid authorization header")
+
+    access_token = authorization.split(" ")[1]
+    await delete_token(redis_db=redis_db, token=access_token)
+
+
+@router.post("/restore", status_code=status.HTTP_200_OK)
+async def request_restore_user(
+    data: RestoreUserRequest, db: AsyncSession = Depends(get_db)
+):
+    """
+    soft delete 되었던 사용자를 복구 요청하는 API
+    Args:
+        data: 복구할 사용자의 정보가 담긴 데이터
+        db: AsyncSession
+
+    Returns:
+        이메일이 발송되었다는 메일
+    """
+    user: User = await is_existing_user(db=db, name=data.name, is_deleted=True)
+    return await send_restore_email(name=user.name, email=user.email)
+
+
+@router.post("/restore/confirm", status_code=status.HTTP_200_OK)
+async def confirm_restore_user(
+    data: RestoreUserConfirm, db: AsyncSession = Depends(get_db)
+):
+    """
+    soft delete 되었던 사용자의 복구를 승인하는 API
+    Args:
+        data: 복구할 사용자의 정보가 담긴 데이터
+        db: AsyncSession
+
+    Returns:
+        복구가 완료되었다는 메일 발송 메시지
+    """
+    return await restore_user(token=data.token, db=db)
+
+
 @router.delete("/delete", status_code=status.HTTP_204_NO_CONTENT)
 async def hard_delete_user(db: AsyncSession = Depends(get_db)):
     """

@@ -77,6 +77,20 @@ async def update_user_in_db(
     await db.refresh(user)
     return user
 
+
+async def soft_delete_user_in_db(db: AsyncSession, user: User) -> None:
+    """
+    soft delete를 수행하는 함수
+    Args:
+        db: AsyncSession
+        user: 삭제할 사용자
+    """
+    user.is_deleted = True
+    user.deleted_at = datetime.now()
+    await db.commit()
+    await db.refresh(user)
+
+
 async def hard_delete_user_in_db(
     db: AsyncSession, delete_threshold_day: int
 ) -> dict[str, str]:

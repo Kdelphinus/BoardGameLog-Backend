@@ -62,3 +62,11 @@ class PasswordResetRequest(BaseModel):
 class PasswordResetConfirm(BaseModel):
     token: str
     new_password: str
+
+
+class RestoreUserRequest(BaseModel):
+    name: str
+
+
+class RestoreUserConfirm(BaseModel):
+    token: str
