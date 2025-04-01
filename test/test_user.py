@@ -5,7 +5,7 @@ from sqlalchemy.future import select
 from fastapi import status
 
 from app.models.user import User
-from test.conftest import USER_DATA, USER_DATA_LIST, USER_API_URL
+from test.conftest import USER_DATA, USER_DATA_LIST, USER_API_URL, login_test_user
 
 
 async def make_check_password(user_data: USER_DATA) -> USER_DATA:
@@ -197,7 +197,6 @@ async def test_reset_password_logout_state(
         f"{USER_API_URL}/reset-password", json={"name": create_test_user["name"]}
     )
     status_code = response.status_code
-    response = response.json()
 
     assert status_code == status.HTTP_200_OK
 
@@ -211,7 +210,6 @@ async def test_reset_password_login_state(
         f"{USER_API_URL}/reset-password", json={"name": login_test_user["name"]}
     )
     status_code = response.status_code
-    response = response.json()
 
     assert status_code == status.HTTP_200_OK
 
@@ -314,4 +312,180 @@ async def test_read_not_existed_user(
     assert status_code == status.HTTP_404_NOT_FOUND
 
 
-# TODO patch, delete 테스트 만들어야 함
+@pytest.mark.asyncio
+async def test_change_email(
+    async_client: AsyncClient,
+    login_test_user: USER_DATA,
+):
+    """이메일을 수정을 테스트하는 함수"""
+    change_ameil = "changemail@exam.com"
+    response = await async_client.patch(
+        f"{USER_API_URL}/patch",
+        headers={f"Authorization": f"Bearer {login_test_user["access_token"]}"},
+        json={"email": change_ameil},
+    )
+    status_code = response.status_code
+    response = response.json()
+
+    assert status_code == status.HTTP_200_OK
+    assert login_test_user["name"] == response["name"]
+    assert change_ameil == response["email"]
+
+    response = await async_client.get(
+        f"{USER_API_URL}/list/me",
+        headers={f"Authorization": f"Bearer {login_test_user["access_token"]}"},
+    )
+    current_email = response.json()["email"]
+
+    assert current_email == change_ameil
+
+
+async def test_cannot_modify_immutable_field(
+    async_client: AsyncClient,
+    login_test_user: USER_DATA,
+):
+    """바꿀 수 없는 속성을 바꾸는 테스트"""
+    response = await async_client.patch(
+        f"{USER_API_URL}/patch",
+        headers={f"Authorization": f"Bearer {login_test_user["access_token"]}"},
+        json={"name": "change_user"},
+    )
+
+    status_code = response.status_code
+
+    assert status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+
+async def test_cannot_update_nonexistent_field(
+    async_client: AsyncClient,
+    login_test_user: USER_DATA,
+):
+    """없는 속성을 바꾸는 테스트"""
+    response = await async_client.patch(
+        f"{USER_API_URL}/patch",
+        headers={f"Authorization": f"Bearer {login_test_user["access_token"]}"},
+        json={"no existed attribute": "change_user"},
+    )
+
+    status_code = response.status_code
+
+    assert status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+
+async def test_update_with_identical_data(
+    async_client: AsyncClient,
+    login_test_user: USER_DATA,
+):
+    """기존과 동일한 데이터로 바꾸는 테스트"""
+    response = await async_client.get(
+        f"{USER_API_URL}/list/me",
+        headers={f"Authorization": f"Bearer {login_test_user["access_token"]}"},
+    )
+    current_email = response.json()["email"]
+
+    response = await async_client.patch(
+        f"{USER_API_URL}/patch",
+        headers={f"Authorization": f"Bearer {login_test_user["access_token"]}"},
+        json={"email": current_email},
+    )
+    status_code = response.status_code
+
+    assert status_code == status.HTTP_409_CONFLICT
+
+
+async def test_deactivate_user_login_state(
+    async_client: AsyncClient,
+    login_test_user: USER_DATA,
+):
+    """로그인 한 상태에서 사용자 soft delete"""
+    response = await async_client.patch(
+        f"{USER_API_URL}/deactivate",
+        headers={f"Authorization": f"Bearer {login_test_user["access_token"]}"},
+    )
+    status_code = response.status_code
+
+    assert status_code == status.HTTP_204_NO_CONTENT
+
+    # 로그아웃 확인
+    response = await async_client.get(
+        f"{USER_API_URL}/list/me",
+        headers={f"Authorization": f"Bearer {login_test_user["access_token"]}"},
+    )
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    # 유저 비활성화 확인
+    response = await async_client.get(f"{USER_API_URL}/list/{login_test_user["name"]}")
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    response = await async_client.get(f"{USER_API_URL}/list")
+    response = response.json()
+    for n, e in response:
+        assert n != login_test_user["name"]
+
+    response = await async_client.get(f"{USER_API_URL}/list/deactivate")
+    response = response.json()
+    assert response[0]["name"] == login_test_user["name"]
+
+
+async def test_deactivate_user_logout_state(
+    async_client: AsyncClient,
+    logout_test_user: USER_DATA,
+):
+    """로그아웃 한 상태에서 사용자 soft delete"""
+    response = await async_client.patch(
+        f"{USER_API_URL}/deactivate",
+        headers={f"Authorization": f"Bearer {logout_test_user["access_token"]}"},
+    )
+    status_code = response.status_code
+
+    assert status_code == status.HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.asyncio
+async def test_restore_user_logout_state(
+    async_client: AsyncClient, login_test_user: USER_DATA
+):
+    """로그아웃 한 상태에서 사용자 복원을 요청하는 테스트"""
+    await async_client.patch(
+        f"{USER_API_URL}/deactivate",
+        headers={f"Authorization": f"Bearer {login_test_user["access_token"]}"},
+    )
+
+    response = await async_client.post(
+        f"{USER_API_URL}/restore", json={"name": login_test_user["name"]}
+    )
+    status_code = response.status_code
+
+    assert status_code == status.HTTP_200_OK
+
+
+@pytest.mark.asyncio
+async def test_restore_not_exsited_user_logout_state(async_client: AsyncClient):
+    """없는 사용자 복원을 요청하는 테스트"""
+    response = await async_client.post(
+        f"{USER_API_URL}/restore", json={"name": "not_existed_user_name"}
+    )
+    status_code = response.status_code
+
+    assert status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.asyncio
+async def test_restore_user_login_state(
+    async_client: AsyncClient, login_test_user: USER_DATA
+):
+    """로그인 한 상태에서 사용자 복원을 요청하는 테스트"""
+    response = await async_client.post(
+        f"{USER_API_URL}/restore", json={"name": login_test_user["name"]}
+    )
+    status_code = response.status_code
+
+    assert status_code == status.HTTP_404_NOT_FOUND
+
+
+# TODO 리스토어 토큰이 담긴 url로 접속했을 때, 잘 동작하는지 확인하는 테스트 필요
+@pytest.mark.asyncio
+async def test_restore_user_confirm(
+    async_client: AsyncClient, create_test_user: USER_DATA
+):
+    pass
