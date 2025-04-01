@@ -76,3 +76,32 @@ async def update_user_in_db(
     await db.commit()
     await db.refresh(user)
     return user
+
+async def hard_delete_user_in_db(
+    db: AsyncSession, delete_threshold_day: int
+) -> dict[str, str]:
+    """
+    hard delete 하는 함수
+    Args:
+        db: AsyncSession
+        delete_threshold_day: 영구 삭제하는 임계점
+
+    Returns:
+        결과 메시지
+    """
+    delete_threshold = datetime.now() - timedelta(days=delete_threshold_day)
+
+    results = await db.execute(
+        select(User).where(User.is_deleted == True, User.deleted_at <= delete_threshold)
+    )
+    users_to_delete = results.scalars().all()
+
+    if not users_to_delete:
+        return {"message": "No users to delete"}
+
+    for user in users_to_delete:
+        await db.delete(user)
+
+    await db.commit()
+
+    return {"message": f"Deleted {len(users_to_delete)} users."}

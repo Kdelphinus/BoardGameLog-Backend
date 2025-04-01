@@ -204,3 +204,16 @@ async def update_user(
 
 
 # TODO delete 기능 만들어야 함
+@router.delete("/delete", status_code=status.HTTP_204_NO_CONTENT)
+async def hard_delete_user(db: AsyncSession = Depends(get_db)):
+    """
+    hard delete 하는 API
+    Args:
+        db: AsyncSession
+
+    Returns:
+
+    """
+    return await hard_delete_user_in_db(
+        db=db, delete_threshold_day=settings.HARD_DELETE_USER_DAYS
+    )
