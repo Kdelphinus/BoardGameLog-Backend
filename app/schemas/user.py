@@ -1,13 +1,23 @@
 from pydantic import BaseModel, field_validator, EmailStr
-from pydantic_core.core_schema import FieldValidationInfo
+from pydantic_core.core_schema import ValidationInfo
+from typing import Optional
 
 from app.core.exceptions import NotAcceptableException
 
 
-class User(BaseModel):
+class UserData(BaseModel):
     id: int
     name: str
-    email: str
+    email: EmailStr
+
+
+class UserResponse(BaseModel):
+    name: str
+    email: EmailStr
+
+    class Config:
+        orm_mode = True
+        exclude = {"id", "password"}
 
 
 class UserCreate(BaseModel):
@@ -23,17 +33,40 @@ class UserCreate(BaseModel):
         return v
 
     @field_validator("check_password")
-    def password_match(cls, v: str, info: FieldValidationInfo) -> str:
+    def password_match(cls, v: str, info: ValidationInfo) -> str:
         if "password" in info.data and v != info.data["password"]:
             raise NotAcceptableException("Password does not match.")
         return v
 
 
-class Token(BaseModel):
-    """
-    로그인 API의 출력항목에 해당하는 스키마
-    """
+class UserUpdate(BaseModel):
+    email: Optional[str] = None
 
+
+class AccessToken(BaseModel):
     access_token: str
+    refresh_token: str
     token_type: str
     name: str
+
+
+class RefreshToken(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class PasswordResetRequest(BaseModel):
+    name: str
+
+
+class PasswordResetConfirm(BaseModel):
+    token: str
+    new_password: str
+
+
+class RestoreUserRequest(BaseModel):
+    name: str
+
+
+class RestoreUserConfirm(BaseModel):
+    token: str

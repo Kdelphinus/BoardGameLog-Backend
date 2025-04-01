@@ -1,5 +1,5 @@
 from pydantic import BaseModel, field_validator
-from pydantic_core.core_schema import FieldValidationInfo
+from pydantic_core.core_schema import ValidationInfo
 
 
 class Game(BaseModel):
@@ -29,7 +29,7 @@ class GameCreate(BaseModel):
         raise ValueError("weight 값은 0~5 사이의 값만 가능합니다.")
 
     @field_validator("min_possible_num")
-    def check_min_possible_num(cls, v: int, info: FieldValidationInfo) -> int:
+    def check_min_possible_num(cls, v: int, info: ValidationInfo) -> int:
         if 0 >= v:
             raise ValueError("인원은 0명보다 많아야 합니다.")
         elif v > info.data["max_possible_num"]:
