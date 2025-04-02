@@ -172,6 +172,7 @@ async def get_current_user(
     return current_user
 
 
+# TODO 관리자만 가능하도록
 @router.get(
     "/list/deactivate",
     status_code=status.HTTP_200_OK,
@@ -304,6 +305,7 @@ async def confirm_restore_user(
     return await restore_user(token=data.token, db=db)
 
 
+# TODO 관리자만 가능하도록
 @router.delete("/delete", status_code=status.HTTP_200_OK)
 async def hard_delete_user(db: AsyncSession = Depends(get_db)) -> dict[str, str]:
     """
@@ -312,7 +314,7 @@ async def hard_delete_user(db: AsyncSession = Depends(get_db)) -> dict[str, str]
         db: AsyncSession
 
     Returns:
-
+        영구 삭제된 회원 정보의 수를 포함한 메시지
     """
     return await hard_delete_user_in_db(
         db=db, delete_threshold_day=settings.HARD_DELETE_USER_DAYS

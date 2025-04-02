@@ -48,3 +48,6 @@ async def get_game(game_name: str, db: AsyncSession = Depends(get_db)):
     """
     game = await is_existing_game(db, game_name)
     return game
+
+# TODO 관리자만 가능하도록
+# TODO 관리자만 가능하도록
