@@ -172,7 +172,7 @@ async def test_logout(
     response = await async_client.post(
         f"{USER_API_URL}/logout", headers={"Authorization": f"Bearer {access_token}"}
     )
-    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert response.status_code == status.HTTP_200_OK
 
 
 @pytest.mark.asyncio
@@ -404,7 +404,7 @@ async def test_deactivate_user_login_state(
     )
     status_code = response.status_code
 
-    assert status_code == status.HTTP_204_NO_CONTENT
+    assert status_code == status.HTTP_200_OK
 
     # 로그아웃 확인
     response = await async_client.get(
