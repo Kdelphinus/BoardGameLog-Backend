@@ -1,5 +1,6 @@
 import jwt
 
+from typing import Any
 from datetime import datetime, timezone, timedelta
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -7,6 +8,7 @@ from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from redis.asyncio import Redis
 
+from app.models.user import User
 from app.config import settings
 from app.core.exceptions import CredentialsException
 from app.api.dependencies import get_db, get_redis
@@ -20,7 +22,7 @@ oauth2_scheme = OAuth2PasswordBearer(
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-async def create_token(expire_time: int, user_name: str):
+async def create_token(expire_time: int, user_name: str) -> str:
     """
     token을 만드는 함수
     Args:
@@ -71,7 +73,7 @@ async def decode_token(token: str, detail: str = "Invalid token") -> (str, float
 
 async def issue_access_token(
     db: AsyncSession, redis_db: Redis, form_data: OAuth2PasswordRequestForm = Depends()
-):
+) -> dict[str, Any]:
     """
     해당 사용자가 인증된 사용자인지 확인 후, 액세스 토큰과 리프레시 토큰을 발급하는 함수
     Args:
@@ -112,7 +114,7 @@ async def issue_access_token(
     }
 
 
-async def reissue_access_token(refresh_token: str, redis_db: Redis):
+async def reissue_access_token(refresh_token: str, redis_db: Redis) -> dict[str, Any]:
     """
     리프레시 토큰을 사용해 다시 액세스 토큰을 발급 하는 함수
     Args:
@@ -139,7 +141,7 @@ async def reissue_access_token(refresh_token: str, redis_db: Redis):
     return {"access_token": new_access_token, "token_type": "bearer"}
 
 
-async def delete_token(redis_db: Redis, token: str):
+async def delete_token(redis_db: Redis, token: str) -> dict[str, str]:
     """
     액세스 토큰을 무효화하고, 리프레시 토큰을 삭제하는 함수
     Args:
@@ -159,7 +161,7 @@ async def delete_token(redis_db: Redis, token: str):
     return {"message": "Successfully logged out"}
 
 
-async def send_reset_password_email(name: str, email: str):
+async def send_reset_password_email(name: str, email: str) -> dict[str, str]:
     """
     비밀번호 재설정 링크를 보내는 함수
     Args:
@@ -177,7 +179,9 @@ async def send_reset_password_email(name: str, email: str):
     return {"message": "Password reset email sent"}
 
 
-async def reset_password(token: str, new_password: str, db: AsyncSession):
+async def reset_password(
+    token: str, new_password: str, db: AsyncSession
+) -> dict[str, str]:
     """
     비밀번호를 재설정하는 함수
     Args:
@@ -203,7 +207,7 @@ async def reset_password(token: str, new_password: str, db: AsyncSession):
     return {"message": "Password has been reset"}
 
 
-async def send_restore_email(name: str, email: str):
+async def send_restore_email(name: str, email: str) -> dict[str, str]:
     """
     휴면 사용자를 복구 하는 링크를 보내는 함수
     Args:
@@ -221,7 +225,7 @@ async def send_restore_email(name: str, email: str):
     return {"message": "Restore email sent"}
 
 
-async def restore_user(token: str, db: AsyncSession):
+async def restore_user(token: str, db: AsyncSession) -> dict[str, str]:
     """
     휴면 사용자를 복구하는 함수
     Args:
@@ -251,7 +255,7 @@ async def get_current_user_in_db(
     token: str = Depends(oauth2_scheme),
     db: AsyncSession = Depends(get_db),
     redis_db: Redis = Depends(get_redis),
-):
+) -> User:
     """
     토큰값을 사용하여 현재 사용자 정보를 반환하는 함수
     Args:
