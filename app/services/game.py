@@ -33,4 +33,4 @@ async def is_not_existing_game(db: AsyncSession, game_name: str) -> None:
     """
     game = await get_game_in_db(db, name=game_name.lower())
     if game:
-        raise ConflictException(f"Game [{game_name.lower()} already exists.")
+        raise ConflictException(f"Game [{game_name.lower()}] already exists.")
