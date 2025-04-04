@@ -10,7 +10,7 @@ from redis.asyncio import Redis
 
 from app.models.user import User
 from app.config import settings
-from app.core.exceptions import CredentialsException
+from app.core.exceptions import CredentialsException, ForbiddenException
 from app.api.dependencies import get_db, get_redis
 
 # token 부분만 추출
@@ -280,3 +280,19 @@ async def get_current_user_in_db(
     if user is None:
         raise CredentialsException()
     return user
+
+
+async def get_admin_user_in_db(
+    current_user: User = Depends(get_current_user_in_db),
+) -> User:
+    """
+    관리자 계정을 불러오는 함수
+    Args:
+        current_user: 현재 로그인한 사용자
+
+    Returns:
+        현재 사용자가 관리자일 경우만 반환
+    """
+    if not current_user.is_admin:
+        raise ForbiddenException()
+    return current_user
