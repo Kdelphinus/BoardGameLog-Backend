@@ -22,6 +22,16 @@ class CredentialsException(HTTPException):
         )
 
 
+class ForbiddenException(HTTPException):
+    """HTTP_403_FORBIDDEN"""
+
+    def __init__(self, detail="Permission denied"):
+        super().__init__(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=detail,
+        )
+
+
 class NotFoundException(HTTPException):
     """HTTP_404_NOT_FOUND"""
 
