@@ -56,7 +56,7 @@ async def create_user(
         _user_info: 생성할 사용자의 정보
         db: AsyncSession
     """
-    if _user_info.name.lower() == "all" or _user_info.name.lower() == "deactivate":
+    if _user_info.name.lower() in ["all", "deactivate", "admin"]:
         raise NotAcceptableException(detail="Could not use this name")
     await is_not_existing_user(db=db, name=_user_info.name, email=_user_info.email)
     await create_user_in_db(db=db, user_info=_user_info)
