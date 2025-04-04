@@ -39,6 +39,7 @@ from app.core.security import (
     reset_password,
     send_restore_email,
     restore_user,
+    get_admin_user_in_db,
 )
 from app.services.user import is_existing_user, is_not_existing_user
 from app.models.user import User
@@ -172,17 +173,20 @@ async def get_current_user(
     return current_user
 
 
-# TODO 관리자만 가능하도록
+# TODO 관리자만 가능한지 테스트 추가해야 함
 @router.get(
     "/list/deactivate",
     status_code=status.HTTP_200_OK,
     response_model=List[UserResponse],
 )
-async def get_all_deactivate_user(db: AsyncSession = Depends(get_db)) -> Sequence[User]:
+async def get_all_deactivate_user(
+    db: AsyncSession = Depends(get_db), admin_user: User = Depends(get_admin_user_in_db)
+) -> Sequence[User]:
     """
     모든 비활성화된 사용자 정보를 반환 하는 API
     Args:
         db: AsyncSession
+        admin_user: 관리자 계정
 
     Returns:
         db에 있는 모든 비활성화된 사용자의 정보
@@ -305,13 +309,16 @@ async def confirm_restore_user(
     return await restore_user(token=data.token, db=db)
 
 
-# TODO 관리자만 가능하도록
+# TODO 관리자만 가능한지 테스트 해야 함
 @router.delete("/delete", status_code=status.HTTP_200_OK)
-async def hard_delete_user(db: AsyncSession = Depends(get_db)) -> dict[str, str]:
+async def hard_delete_user(
+    db: AsyncSession = Depends(get_db), admin_user: User = Depends(get_admin_user_in_db)
+) -> dict[str, str]:
     """
     hard delete 하는 API
     Args:
         db: AsyncSession
+        admin_user: 관리자 계정
 
     Returns:
         영구 삭제된 회원 정보의 수를 포함한 메시지
