@@ -10,6 +10,17 @@ class Game(BaseModel):
     min_possible_num: int
 
 
+class GameResponse(BaseModel):
+    name: str
+    weight: float
+    max_possible_num: int
+    min_possible_num: int
+
+    class Config:
+        from_attributes = True
+        exclude = {"id"}
+
+
 class GameCreate(BaseModel):
     name: str
     weight: float
@@ -35,3 +46,10 @@ class GameCreate(BaseModel):
         elif v > info.data["max_possible_num"]:
             raise ValueError("최대 인원 게임은 최소 게임 인원보다 항상 커야 합니다.")
         return v
+
+
+class GameUpdate(BaseModel):
+    name: str = None
+    weight: float = None
+    max_possible_num: int = None
+    min_possible_num: int = None
