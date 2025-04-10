@@ -8,6 +8,8 @@ from app.main import app
 from app.db.database import Base
 from app.config import settings
 from app.api.dependencies import get_db
+from app.models.user import User
+from app.core.security import pwd_context
 
 
 USER_DATA = dict[str, str]
@@ -116,6 +118,20 @@ def user_data_list() -> USER_DATA_LIST:
 
 
 @pytest.fixture(scope="function")
+def admin_data() -> USER_DATA:
+    """
+    테스트 관리자 데이터를 반환하는 함수
+    Returns:
+       관리자 데이터가 dictionary 로 반환
+    """
+    return {
+        "name": "testadmin",
+        "email": "testadmin@example.com",
+        "password": "Testadminpassword123",
+    }
+
+
+@pytest.fixture(scope="function")
 async def create_test_user_list(
     async_client: AsyncClient, user_data_list: USER_DATA_LIST
 ) -> None:
@@ -198,3 +214,44 @@ async def logout_test_user(
     )
 
     return login_test_user
+
+
+@pytest.fixture(scope="function")
+async def create_admin_user(db_session: AsyncSession, admin_data: USER_DATA):
+    """테스트 용 관리자 계정을 생성하는 함수"""
+    admin_user = User(
+        name=admin_data["name"],
+        email=admin_data["email"],
+        password=pwd_context.hash(admin_data["password"]),
+        is_admin=True,
+    )
+    db_session.add(admin_user)
+    await db_session.commit()
+    await db_session.refresh(admin_user)
+    return admin_data
+
+
+@pytest.fixture(scope="function")
+async def login_admin_user(
+    async_client: AsyncClient,
+    db_session: AsyncSession,
+    create_admin_user: USER_DATA,
+) -> USER_DATA:
+    """
+    테스트용 사용자로 로그인
+    Args:
+        async_client: AsyncClient
+        db_session: AsyncSession
+        create_admin_user: 테스트용 관리자를 생성하는 함수
+
+    Returns:
+        로그인 한 사용자의 정보 반환
+        key = ["access_token", "refresh_token", "token_type", "name"]
+    """
+    login_data = {
+        "username": create_admin_user["name"],
+        "password": create_admin_user["password"],
+    }
+    response = await async_client.post(f"{USER_API_URL}/login", data=login_data)
+    return response.json()
+

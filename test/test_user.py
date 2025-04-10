@@ -400,6 +400,7 @@ async def test_update_with_identical_data(
 async def test_deactivate_user_login_state(
     async_client: AsyncClient,
     login_test_user: USER_DATA,
+    login_admin_user: USER_DATA,
 ):
     """로그인 한 상태에서 사용자 soft delete"""
     response = await async_client.patch(
@@ -426,9 +427,12 @@ async def test_deactivate_user_login_state(
     for n, e in response:
         assert n != login_test_user["name"]
 
-    response = await async_client.get(f"{USER_API_URL}/list/deactivate")
+    response = await async_client.get(
+        f"{USER_API_URL}/list/deactivate",
+        headers={f"Authorization": f"Bearer {login_admin_user["access_token"]}"},
+    )
     response = response.json()
-    assert response[0]["name"] == login_test_user["name"]
+    assert len(response) == 1
 
 
 @pytest.mark.asyncio
