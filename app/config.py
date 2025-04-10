@@ -28,6 +28,10 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 10080  # 7일
 
+    # mail
+    ADMIN_MAIL: str
+    ADMIN_PWD: str
+
     # test
     TEST_DATABASE_URL: str
 
@@ -51,5 +55,7 @@ settings = Settings(
     REDIS_HOST=os.getenv("REDIS_HOST"),
     REDIS_PORT=int(os.getenv("REDIS_PORT")),
     REDIS_DATABASE=int(os.getenv("REDIS_DATABASE")),
+    ADMIN_MAIL=os.getenv("ADMIN_MAIL"),
+    ADMIN_PWD=os.getenv("ADMIN_PWD"),
     TEST_DATABASE_URL=os.getenv("TEST_DATABASE_URL"),
 )

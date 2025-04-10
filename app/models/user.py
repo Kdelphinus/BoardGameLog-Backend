@@ -11,6 +11,7 @@ class User(Base):
     name = Column(String, unique=True, nullable=False)  # 사용자의 이름
     email = Column(String, unique=True, nullable=False)  # 사용자의 이메일
     password = Column(String, nullable=False)  # 사용자의 비밀번호
+    is_admin = Column(Boolean, nullable=False, default=False)  # 관리자 유무
 
     # 추후 쿼리 효율이 떨어지면 인덱싱 고려
     is_deleted = Column(Boolean, nullable=False, default=False)  # 탈퇴 유무

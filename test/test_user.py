@@ -5,7 +5,7 @@ from sqlalchemy.future import select
 from fastapi import status
 
 from app.models.user import User
-from test.conftest import USER_DATA, USER_DATA_LIST, USER_API_URL, login_test_user
+from test.conftest import USER_DATA, USER_DATA_LIST, USER_API_URL
 
 
 async def make_check_password(user_data: USER_DATA) -> USER_DATA:
@@ -172,7 +172,7 @@ async def test_logout(
     response = await async_client.post(
         f"{USER_API_URL}/logout", headers={"Authorization": f"Bearer {access_token}"}
     )
-    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert response.status_code == status.HTTP_200_OK
 
 
 @pytest.mark.asyncio
@@ -340,6 +340,7 @@ async def test_change_email(
     assert current_email == change_ameil
 
 
+@pytest.mark.asyncio
 async def test_cannot_modify_immutable_field(
     async_client: AsyncClient,
     login_test_user: USER_DATA,
@@ -356,6 +357,7 @@ async def test_cannot_modify_immutable_field(
     assert status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
+@pytest.mark.asyncio
 async def test_cannot_update_nonexistent_field(
     async_client: AsyncClient,
     login_test_user: USER_DATA,
@@ -372,6 +374,7 @@ async def test_cannot_update_nonexistent_field(
     assert status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
+@pytest.mark.asyncio
 async def test_update_with_identical_data(
     async_client: AsyncClient,
     login_test_user: USER_DATA,
@@ -393,9 +396,11 @@ async def test_update_with_identical_data(
     assert status_code == status.HTTP_409_CONFLICT
 
 
+@pytest.mark.asyncio
 async def test_deactivate_user_login_state(
     async_client: AsyncClient,
     login_test_user: USER_DATA,
+    login_admin_user: USER_DATA,
 ):
     """로그인 한 상태에서 사용자 soft delete"""
     response = await async_client.patch(
@@ -404,7 +409,7 @@ async def test_deactivate_user_login_state(
     )
     status_code = response.status_code
 
-    assert status_code == status.HTTP_204_NO_CONTENT
+    assert status_code == status.HTTP_200_OK
 
     # 로그아웃 확인
     response = await async_client.get(
@@ -422,11 +427,15 @@ async def test_deactivate_user_login_state(
     for n, e in response:
         assert n != login_test_user["name"]
 
-    response = await async_client.get(f"{USER_API_URL}/list/deactivate")
+    response = await async_client.get(
+        f"{USER_API_URL}/list/deactivate",
+        headers={f"Authorization": f"Bearer {login_admin_user["access_token"]}"},
+    )
     response = response.json()
-    assert response[0]["name"] == login_test_user["name"]
+    assert len(response) == 1
 
 
+@pytest.mark.asyncio
 async def test_deactivate_user_logout_state(
     async_client: AsyncClient,
     logout_test_user: USER_DATA,

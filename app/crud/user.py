@@ -2,6 +2,7 @@ from typing import Any
 from datetime import datetime, timedelta
 
 from pydantic import EmailStr
+from sqlalchemy import Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -10,7 +11,7 @@ from app.schemas.user import UserCreate
 from app.core.security import pwd_context
 
 
-async def create_user_in_db(db: AsyncSession, user_info: UserCreate):
+async def create_user_in_db(db: AsyncSession, user_info: UserCreate) -> None:
     """
     db에 사용자를 생성하는 함수
     Args:
@@ -32,7 +33,7 @@ async def create_user_in_db(db: AsyncSession, user_info: UserCreate):
 
 async def get_user_in_db(
     db: AsyncSession, name: str = None, email: EmailStr = None, is_deleted: bool = False
-):
+) -> User | Sequence[User]:
     """
     db에 있는 사용자 정보를 가져오는 함수
     Args:

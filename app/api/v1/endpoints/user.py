@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy import Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 from redis.asyncio import Redis
-from typing import List
+from typing import List, Any
 
 from app.api.dependencies import get_db, get_redis
 from app.config import settings
@@ -38,6 +39,7 @@ from app.core.security import (
     reset_password,
     send_restore_email,
     restore_user,
+    get_admin_user_in_db,
 )
 from app.services.user import is_existing_user, is_not_existing_user
 from app.models.user import User
@@ -46,14 +48,16 @@ router = APIRouter()
 
 
 @router.post("/create", status_code=status.HTTP_201_CREATED)
-async def create_user(_user_info: UserCreate, db: AsyncSession = Depends(get_db)):
+async def create_user(
+    _user_info: UserCreate, db: AsyncSession = Depends(get_db)
+) -> None:
     """
     사용자를 생성하는 API
     Args:
         _user_info: 생성할 사용자의 정보
         db: AsyncSession
     """
-    if _user_info.name.lower() == "all" or _user_info.name.lower() == "deactivate":
+    if _user_info.name.lower() in ["all", "deactivate", "admin"]:
         raise NotAcceptableException(detail="Could not use this name")
     await is_not_existing_user(db=db, name=_user_info.name, email=_user_info.email)
     await create_user_in_db(db=db, user_info=_user_info)
@@ -64,7 +68,7 @@ async def login(
     db: AsyncSession = Depends(get_db),
     redis_db: Redis = Depends(get_redis),
     form_data: OAuth2PasswordRequestForm = Depends(),
-):
+) -> dict[str, Any]:
     """
     로그인을 위한 액세스 토큰을 발급하는 API
     Args:
@@ -79,7 +83,9 @@ async def login(
 
 
 @router.post("/refresh", response_model=RefreshToken)
-async def refresh(request: Request, redis_db: Redis = Depends(get_redis)):
+async def refresh(
+    request: Request, redis_db: Redis = Depends(get_redis)
+) -> dict[str, Any]:
     """
     리프레시 토큰을 이용해 새로운 액세스 토큰을 발급하는 API
     Args:
@@ -97,13 +103,18 @@ async def refresh(request: Request, redis_db: Redis = Depends(get_redis)):
     return await reissue_access_token(refresh_token=refresh_token, redis_db=redis_db)
 
 
-@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
-async def logout(request: Request, redis_db: Redis = Depends(get_redis)):
+@router.post("/logout", status_code=status.HTTP_200_OK)
+async def logout(
+    request: Request, redis_db: Redis = Depends(get_redis)
+) -> dict[str, str]:
     """
     액세스 토큰을 블랙리스트에 올리고, 리프레시 토큰을 삭제하는 API
     Args:
         request: Request
         redis_db: redis db
+
+    Returns:
+        로그아웃 되었다는 메시지
     """
     authorization = request.headers.get("Authorization")
     if not authorization or not authorization.startswith("Bearer "):
@@ -116,7 +127,7 @@ async def logout(request: Request, redis_db: Redis = Depends(get_redis)):
 @router.post("/reset-password", status_code=status.HTTP_200_OK)
 async def request_reset_password(
     data: PasswordResetRequest, db: AsyncSession = Depends(get_db)
-):
+) -> dict[str, str]:
     """
     비밀번호 재설정을 요청하는 API
     Args:
@@ -134,7 +145,7 @@ async def request_reset_password(
 @router.post("/reset-password/confirm", status_code=status.HTTP_200_OK)
 async def confirm_reset_password(
     data: PasswordResetConfirm, db: AsyncSession = Depends(get_db)
-):
+) -> dict[str, str]:
     """
     비밀번호 재설정을 승인하는 API
     Args:
@@ -144,13 +155,13 @@ async def confirm_reset_password(
     Returns:
         변경 완료 메시지
     """
-    return reset_password(token=data.token, new_password=data.new_password, db=db)
+    return await reset_password(token=data.token, new_password=data.new_password, db=db)
 
 
 @router.get("/list/me", status_code=status.HTTP_200_OK, response_model=UserResponse)
 async def get_current_user(
     current_user: User = Depends(get_current_user_in_db),
-):
+) -> User:
     """
     현재 로그인한 사용자 정보를 반환하는 API
     Args:
@@ -162,16 +173,20 @@ async def get_current_user(
     return current_user
 
 
+# TODO 관리자만 가능한지 테스트 추가해야 함
 @router.get(
     "/list/deactivate",
     status_code=status.HTTP_200_OK,
     response_model=List[UserResponse],
 )
-async def get_all_deactivate_user(db: AsyncSession = Depends(get_db)):
+async def get_all_deactivate_user(
+    db: AsyncSession = Depends(get_db), admin_user: User = Depends(get_admin_user_in_db)
+) -> Sequence[User]:
     """
     모든 비활성화된 사용자 정보를 반환 하는 API
     Args:
         db: AsyncSession
+        admin_user: 관리자 계정
 
     Returns:
         db에 있는 모든 비활성화된 사용자의 정보
@@ -182,7 +197,7 @@ async def get_all_deactivate_user(db: AsyncSession = Depends(get_db)):
 @router.get(
     "/list/{user_name}", status_code=status.HTTP_200_OK, response_model=UserResponse
 )
-async def get_user(user_name: str, db: AsyncSession = Depends(get_db)):
+async def get_user(user_name: str, db: AsyncSession = Depends(get_db)) -> User:
     """
     특정 사용자 정보를 반환 하는 API
     Args:
@@ -197,7 +212,7 @@ async def get_user(user_name: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/list", status_code=status.HTTP_200_OK, response_model=List[UserResponse])
-async def get_all_user(db: AsyncSession = Depends(get_db)):
+async def get_all_user(db: AsyncSession = Depends(get_db)) -> Sequence[User]:
     """
     사용자 전체 정보를 반환 하는 API
     Args:
@@ -214,7 +229,7 @@ async def update_user(
     user_update: UserUpdate,
     current_user: User = Depends(get_current_user_in_db),
     db: AsyncSession = Depends(get_db),
-):
+) -> User:
     """
     사용자 정보를 수정하는 API
     Args:
@@ -237,13 +252,13 @@ async def update_user(
     return await update_user_in_db(db, user=current_user, update_data=update_data)
 
 
-@router.patch("/deactivate", status_code=status.HTTP_204_NO_CONTENT)
+@router.patch("/deactivate", status_code=status.HTTP_200_OK)
 async def soft_delete_user(
     request: Request,
     redis_db: Redis = Depends(get_redis),
     current_user: User = Depends(get_current_user_in_db),
     db: AsyncSession = Depends(get_db),
-):
+) -> dict[str, str]:
     """
     사용자를 soft delete 시키는 API
     Args:
@@ -258,13 +273,13 @@ async def soft_delete_user(
         raise CredentialsException(detail="Invalid authorization header")
 
     access_token = authorization.split(" ")[1]
-    await delete_token(redis_db=redis_db, token=access_token)
+    return await delete_token(redis_db=redis_db, token=access_token)
 
 
 @router.post("/restore", status_code=status.HTTP_200_OK)
 async def request_restore_user(
     data: RestoreUserRequest, db: AsyncSession = Depends(get_db)
-):
+) -> dict[str, str]:
     """
     soft delete 되었던 사용자를 복구 요청하는 API
     Args:
@@ -281,7 +296,7 @@ async def request_restore_user(
 @router.post("/restore/confirm", status_code=status.HTTP_200_OK)
 async def confirm_restore_user(
     data: RestoreUserConfirm, db: AsyncSession = Depends(get_db)
-):
+) -> dict[str, str]:
     """
     soft delete 되었던 사용자의 복구를 승인하는 API
     Args:
@@ -294,15 +309,19 @@ async def confirm_restore_user(
     return await restore_user(token=data.token, db=db)
 
 
-@router.delete("/delete", status_code=status.HTTP_204_NO_CONTENT)
-async def hard_delete_user(db: AsyncSession = Depends(get_db)):
+# TODO 관리자만 가능한지 테스트 해야 함
+@router.delete("/delete", status_code=status.HTTP_200_OK)
+async def hard_delete_user(
+    db: AsyncSession = Depends(get_db), admin_user: User = Depends(get_admin_user_in_db)
+) -> dict[str, str]:
     """
     hard delete 하는 API
     Args:
         db: AsyncSession
+        admin_user: 관리자 계정
 
     Returns:
-
+        영구 삭제된 회원 정보의 수를 포함한 메시지
     """
     return await hard_delete_user_in_db(
         db=db, delete_threshold_day=settings.HARD_DELETE_USER_DAYS
