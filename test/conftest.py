@@ -85,7 +85,7 @@ def override_get_async_session(db_session: AsyncSession):
 
 
 @pytest.fixture(scope="function")
-def user_data_list() -> list[dict[str, str]]:
+def user_data_list() -> USER_DATA_LIST:
     """
     테스트 사용자 데이터를 반환하는 함수
     Returns:

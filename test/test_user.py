@@ -5,7 +5,7 @@ from sqlalchemy.future import select
 from fastapi import status
 
 from app.models.user import User
-from test.conftest import USER_DATA, USER_DATA_LIST, USER_API_URL, login_test_user
+from test.conftest import USER_DATA, USER_DATA_LIST, USER_API_URL
 
 
 async def make_check_password(user_data: USER_DATA) -> USER_DATA:
@@ -340,6 +340,7 @@ async def test_change_email(
     assert current_email == change_ameil
 
 
+@pytest.mark.asyncio
 async def test_cannot_modify_immutable_field(
     async_client: AsyncClient,
     login_test_user: USER_DATA,
@@ -356,6 +357,7 @@ async def test_cannot_modify_immutable_field(
     assert status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
+@pytest.mark.asyncio
 async def test_cannot_update_nonexistent_field(
     async_client: AsyncClient,
     login_test_user: USER_DATA,
@@ -372,6 +374,7 @@ async def test_cannot_update_nonexistent_field(
     assert status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
+@pytest.mark.asyncio
 async def test_update_with_identical_data(
     async_client: AsyncClient,
     login_test_user: USER_DATA,
@@ -393,6 +396,7 @@ async def test_update_with_identical_data(
     assert status_code == status.HTTP_409_CONFLICT
 
 
+@pytest.mark.asyncio
 async def test_deactivate_user_login_state(
     async_client: AsyncClient,
     login_test_user: USER_DATA,
@@ -427,6 +431,7 @@ async def test_deactivate_user_login_state(
     assert response[0]["name"] == login_test_user["name"]
 
 
+@pytest.mark.asyncio
 async def test_deactivate_user_logout_state(
     async_client: AsyncClient,
     logout_test_user: USER_DATA,
