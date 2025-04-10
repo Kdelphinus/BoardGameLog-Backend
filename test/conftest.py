@@ -1,4 +1,5 @@
 import pytest
+from typing import Any
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
@@ -14,6 +15,9 @@ from app.core.security import pwd_context
 
 USER_DATA = dict[str, str]
 USER_DATA_LIST = list[USER_DATA]
+GAME_DATA = dict[str, Any]
+GAME_DATA_LIST = list[GAME_DATA]
+
 BASIC_API_URL = f"/api/{settings.API_VERSION}"
 USER_API_URL = f"{BASIC_API_URL}/users"
 GAME_API_URL = f"{BASIC_API_URL}/games"
@@ -129,6 +133,29 @@ def admin_data() -> USER_DATA:
         "email": "testadmin@example.com",
         "password": "Testadminpassword123",
     }
+
+
+@pytest.fixture(scope="function")
+def game_data_list() -> GAME_DATA_LIST:
+    """
+    테스트 용 게임 데이터를 반환하는 함수
+    Returns:
+        게임 데이터가 dictionary 리스트로 반환
+    """
+    return [
+        {
+            "name": "캐스캐디아",
+            "weight": 1.97,
+            "min_possible_num": 1,
+            "max_possible_num": 4,
+        },
+        {
+            "name": "아크노바",
+            "weight": 3.97,
+            "min_possible_num": 1,
+            "max_possible_num": 4,
+        },
+    ]
 
 
 @pytest.fixture(scope="function")
@@ -255,3 +282,51 @@ async def login_admin_user(
     response = await async_client.post(f"{USER_API_URL}/login", data=login_data)
     return response.json()
 
+
+@pytest.fixture(scope="function")
+async def create_test_game(
+    async_client: AsyncClient,
+    login_admin_user: USER_DATA,
+    game_data_list: GAME_DATA_LIST,
+) -> GAME_DATA:
+    """
+    임시 게임 정보를 생성하는 함수
+    Args:
+        async_client: AsyncClient
+        login_admin_user: 관리자 계정
+        game_data_list: 임시 게임 정보 리스트
+
+    Returns:
+        생성된 게임의 정보
+    """
+    response = await async_client.post(
+        f"{GAME_API_URL}/create",
+        json=game_data_list[0],
+        headers={f"Authorization": f"Bearer {login_admin_user["access_token"]}"},
+    )
+    return game_data_list[0]
+
+
+@pytest.fixture(scope="function")
+async def create_test_all_game(
+    async_client: AsyncClient,
+    login_admin_user: USER_DATA,
+    game_data_list: GAME_DATA_LIST,
+) -> GAME_DATA_LIST:
+    """
+    임시 게임 정보를 생성하는 함수
+    Args:
+        async_client: AsyncClient
+        login_admin_user: 관리자 계정
+        game_data_list: 임시 게임 정보 리스트
+
+    Returns:
+        생성된 게임의 정보
+    """
+    for tmp_game_data in game_data_list:
+        await async_client.post(
+            f"{GAME_API_URL}/create",
+            json=tmp_game_data,
+            headers={f"Authorization": f"Bearer {login_admin_user["access_token"]}"},
+        )
+    return game_data_list
