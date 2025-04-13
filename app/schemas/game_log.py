@@ -35,3 +35,12 @@ class GameLogCreate(BaseModel):
         if not v or not v.strip():
             raise NotAcceptableException("Empty values are not allowed.")
         return v
+
+
+class GameLogUpdate(BaseModel):
+    game_id: int
+    during_time: int
+    participant_num: int
+    subject: str
+    content: str | None = None
+    picture: str | None = None
