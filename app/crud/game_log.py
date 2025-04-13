@@ -36,20 +36,28 @@ async def create_game_log_in_db(
     await db.commit()
 
 
-async def get_game_log_in_db(db: AsyncSession, user: User = None, game: Game = None):
+async def get_game_log_in_db(
+    db: AsyncSession, user: User = None, game: Game = None, game_log_id: int = None
+):
     """
     db에 있는 게임 기록을 반환하는 함수
     Args:
         db: AsyncSession
         user: 불러올 기록을 작성한 사용자
         game: 불러올 기록에 포함된 게임
+        game_log_id: 불러올 기록의 id
 
     Returns:
         1) user, game 입력 안 했을 때: 전체 게임 기록
         2) user, game 모두 입력 했을 때: 특정 사용자가 특정 게임을 작성한 기록
         3) user만 입력 했을 때: 특정 사용자가 기록한 게임 기록
         4) game만 입력 했을 때: 특정 게임이 작성된 기록
+        5) game_log_id 입력 시: 특정 기록
     """
+    if game_log_id:
+        result = await db.execute(select(GameLog).where(GameLog.id == game_log_id))
+        return result.scalars().first()
+
     if not user and not game:
         results = await db.execute(select(GameLog))
     elif user and game:

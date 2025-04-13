@@ -30,7 +30,7 @@ async def create_game_log(
     if game_log_info.game_name.lower() == "all":
         raise NotAcceptableException(detail="Could not using this name")
     game = await is_existing_game(db, game_log_info.game_name)
-    await validate_participant_num(game, game_log_info)
+    await validate_participant_num(game, game_log_info.participant_num)
     await create_game_log_in_db(db, game_log_info, user=current_user, game=game)
 
 
