@@ -1,3 +1,4 @@
+from typing import Any
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -72,3 +73,40 @@ async def get_game_log_in_db(
         results = await db.execute(select(GameLog).where(GameLog.game_id == game.id))
 
     return results.scalars().all()
+
+
+async def update_game_log_in_db(
+    db: AsyncSession, game_log: GameLog, update_data: dict[str, Any]
+) -> GameLog:
+    """
+    db에 있는 게임 기록 정보를 수정하는 함수
+    Args:
+        db: AsyncSession
+        game_log: 변경할 게임 기록
+        update_data: 변경할 내용이 담긴 딕셔너리
+
+    Returns:
+        주어진 정보로 수정한 게임 기록
+    """
+    for key, value in update_data.items():
+        setattr(game_log, key, value)
+
+    await db.commit()
+    await db.refresh(game_log)
+    return game_log
+
+
+async def delete_game_log_in_db(db: AsyncSession, game_log: GameLog) -> dict[str, str]:
+    """
+    db에 있는 게임 기록을 삭제하는 함수
+    Args:
+        db: AsyncSession
+        game_log: 삭제하고자 하는 게임 기록
+
+    Returns:
+        삭제가 완료되었다는 메시지
+    """
+    await db.delete(game_log)
+    await db.commit()
+
+    return {"message": f"{game_log.id} deleted"}
