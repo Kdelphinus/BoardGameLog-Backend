@@ -22,6 +22,10 @@ async def create_game_log(
 ):
     """
     게임 기록 생성하는 API
+    Args:
+        game_log_info: 생성할 게임 기록이 담긴 데이터
+        db: AsyncSession
+        current_user: 현재 사용자
     """
     if game_log_info.game_name.lower() == "all":
         raise NotAcceptableException(detail="Could not using this name")
@@ -34,6 +38,11 @@ async def create_game_log(
 async def get_all_game_log(db: AsyncSession = Depends(get_db)):
     """
     모든 게임 기록 반환하는 API
+    Args:
+        db: AsyncSession
+
+    Returns:
+        전체 게임 기록
     """
     return await get_game_log_in_db(db)
 
@@ -45,6 +54,12 @@ async def get_game_log_by_user(
 ):
     """
     현재 사용자의 게임 기록 반환하는 API
+    Args:
+        db: AsyncSession
+        current_user: 현재 사용자
+
+    Returns:
+        현재 사용자가 생성한 기록
     """
     return await get_game_log_in_db(db, user=current_user)
 
@@ -53,6 +68,12 @@ async def get_game_log_by_user(
 async def get_game_log_by_game(game_name: str, db: AsyncSession = Depends(get_db)):
     """
     특정 게임의 기록을 반환하는 API
+    Args:
+        game_name: 찾고자 하는 게임 이름
+        db: AsyncSession
+
+    Returns:
+        찾고자 하는 게임의 기록
     """
     game = await is_existing_game(db, game_name)
     return await get_game_log_in_db(db, game=game)
@@ -65,7 +86,14 @@ async def get_game_log_by_user_and_game(
     current_user: User = Depends(get_current_user_in_db),
 ):
     """
-    현재 사용자의 특정 게임 기록을 반환하는API
+    현재 사용자의 특정 게임 기록을 반환하는 API
+    Args:
+        game_name: 찾고자 하는 게임 이름
+        db: AsyncSession
+        current_user: 현재 사용자
+
+    Returns:
+        현재 사용자의 특정 게임 기록들
     """
     game = await is_existing_game(db, game_name)
     return await get_game_log_in_db(db, user=current_user, game=game)
