@@ -33,14 +33,12 @@ async def create_game_log(
         db: AsyncSession
         current_user: 현재 사용자
     """
-    if game_log_info.game_name.lower() == "all":
-        raise NotAcceptableException(detail="Could not using this name")
     game = await is_existing_game(db, game_log_info.game_name)
     await validate_participant_num(game, game_log_info.participant_num)
     await create_game_log_in_db(db, game_log_info, user=current_user, game=game)
 
 
-@router.get("/list/all", status_code=status.HTTP_200_OK)
+@router.get("/list", status_code=status.HTTP_200_OK)
 async def get_all_game_log(db: AsyncSession = Depends(get_db)):
     """
     모든 게임 기록 반환하는 API
