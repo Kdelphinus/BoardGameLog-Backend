@@ -17,6 +17,8 @@ USER_DATA = dict[str, str]
 USER_DATA_LIST = list[USER_DATA]
 GAME_DATA = dict[str, Any]
 GAME_DATA_LIST = list[GAME_DATA]
+GAME_LOG_DATA = dict[str, Any]
+GAME_LOG_DATA_LIST = list[GAME_LOG_DATA]
 
 BASIC_API_URL = f"/api/{settings.API_VERSION}"
 USER_API_URL = f"{BASIC_API_URL}/users"
@@ -154,6 +156,31 @@ def game_data_list() -> GAME_DATA_LIST:
             "weight": 3.97,
             "min_possible_num": 1,
             "max_possible_num": 4,
+        },
+    ]
+
+
+@pytest.fixture(scope="function")
+def game_log_data_list() -> GAME_LOG_DATA_LIST:
+    """
+    테스트 용 게임 기록 데이터를 반환하는 함수
+    Returns:
+        게임 기록 데이터가 dictionary 리스트로 반환
+    """
+    return [
+        {
+            "game_name": "캐스캐디아",
+            "during_time": 30,
+            "participant_num": 2,
+            "subject": "캐스캐디아 첫 판",
+            "content": "구성물들이 이쁘다",
+        },
+        {
+            "game_name": "아크노바",
+            "during_time": 180,
+            "participant_num": 2,
+            "subject": "아크노바 첫 판",
+            "content": "동물원 만들기 재밌다",
         },
     ]
 
@@ -330,3 +357,37 @@ async def create_test_all_game(
             headers={f"Authorization": f"Bearer {login_admin_user["access_token"]}"},
         )
     return game_data_list
+
+
+@pytest.fixture(scope="function")
+async def create_test_all_game_log(
+    async_client: AsyncClient,
+    login_test_user: USER_DATA,
+    login_admin_user: USER_DATA,
+    create_test_all_game: GAME_DATA_LIST,
+    game_log_data_list: GAME_LOG_DATA_LIST,
+) -> (USER_DATA, GAME_LOG_DATA_LIST):
+    """
+    임시 게임 기록을 생성하는 함수
+    Args:
+        async_client: AsyncClient
+        login_test_user: 사용자 계정
+        login_admin_user: 관리자 계정
+        create_test_all_game: 만들 게임 기록
+        game_log_data_list: 임시 게임 기록
+
+    Returns:
+        기록을 생성한 유저, 생성된 게임 기록 리스트
+    """
+    for tmp_game_log_data in game_log_data_list:
+        await async_client.post(
+            f"{GAME_LOG_API_URL}/create",
+            json=tmp_game_log_data,
+            headers={f"Authorization": f"Bearer {login_test_user["access_token"]}"},
+        )
+        await async_client.post(
+            f"{GAME_LOG_API_URL}/create",
+            json=tmp_game_log_data,
+            headers={f"Authorization": f"Bearer {login_admin_user["access_token"]}"},
+        )
+    return login_test_user, game_log_data_list
