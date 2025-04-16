@@ -64,7 +64,7 @@ async def get_game_log_in_db(
     elif user and game:
         results = await db.execute(
             select(GameLog).where(
-                (GameLog.user_id == user.id) and (GameLog.game_id == game.id)
+                (GameLog.user_id == user.id) & (GameLog.game_id == game.id)
             )
         )
     elif user:
