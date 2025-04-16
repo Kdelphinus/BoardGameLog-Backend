@@ -68,21 +68,6 @@ async def get_game_log_by_user(
     return await get_game_log_in_db(db, user=current_user)
 
 
-@router.get("/list/{game_name}", status_code=status.HTTP_200_OK)
-async def get_game_log_by_game(game_name: str, db: AsyncSession = Depends(get_db)):
-    """
-    특정 게임의 기록을 반환하는 API
-    Args:
-        game_name: 찾고자 하는 게임 이름
-        db: AsyncSession
-
-    Returns:
-        찾고자 하는 게임의 기록
-    """
-    game = await is_existing_game(db, game_name)
-    return await get_game_log_in_db(db, game=game)
-
-
 @router.get("/list/my/{game_name}", status_code=status.HTTP_200_OK)
 async def get_game_log_by_user_and_game(
     game_name: str,
@@ -101,6 +86,21 @@ async def get_game_log_by_user_and_game(
     """
     game = await is_existing_game(db, game_name)
     return await get_game_log_in_db(db, user=current_user, game=game)
+
+
+@router.get("/list/{game_name}", status_code=status.HTTP_200_OK)
+async def get_game_log_by_game(game_name: str, db: AsyncSession = Depends(get_db)):
+    """
+    특정 게임의 기록을 반환하는 API
+    Args:
+        game_name: 찾고자 하는 게임 이름
+        db: AsyncSession
+
+    Returns:
+        찾고자 하는 게임의 기록
+    """
+    game = await is_existing_game(db, game_name)
+    return await get_game_log_in_db(db, game=game)
 
 
 @router.patch("/patch/my/{game_log_id}", status_code=status.HTTP_200_OK)
