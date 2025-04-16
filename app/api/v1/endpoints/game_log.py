@@ -2,9 +2,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from app.core.exceptions import NotAcceptableException, UnprocessableEntityException
+from app.core.exceptions import NotAcceptableException, ForbiddenException
 from app.models.user import User
-from app.models.game import Game
 from app.api.dependencies import get_db
 from app.core.security import get_current_user_in_db
 from app.crud.game_log import (
@@ -122,11 +121,14 @@ async def update_game_log(
         변경된 게임 기록
     """
     game_log = await is_existing_game_log(db, game_log_id)
-    if game_log.user_id != current_user.id:
-        raise NotAcceptableException(detail="You are not the owner of this game log")
+    if game_log.user_name != current_user.name:
+        raise ForbiddenException(detail=f"You are not the owner of this game log")
 
     update_data = game_log_update.model_dump(exclude_unset=True)
-    game: Game = game_log.game
+    game = await is_existing_game(db, game_log.game_name)
+
+    if "game_name" in update_data:
+        game = await is_existing_game(db, update_data["game_name"])
 
     if "during_time" in update_data and update_data["during_time"] <= 0:
         raise NotAcceptableException(detail="During time cannot be negative")
@@ -160,6 +162,6 @@ async def delete_game_log(
         삭제가 완료되었다는 메시지
     """
     game_log = await is_existing_game_log(db, game_log_id)
-    if game_log.user_id != current_user.id:
-        raise NotAcceptableException(detail="You are not the owner of this game log")
+    if game_log.user_name != current_user.name:
+        raise ForbiddenException(detail="You are not the owner of this game log")
     return await delete_game_log_in_db(db, game_log)
