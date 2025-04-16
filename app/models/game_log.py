@@ -8,11 +8,11 @@ class GameLog(Base):
     __tablename__ = "game_logs"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE")
+    user_name = Column(
+        String, ForeignKey("users.name", ondelete="CASCADE")
     )  # 기록한 사용자의 id
-    game_id = Column(
-        Integer, ForeignKey("games.id", ondelete="CASCADE")
+    game_name = Column(
+        String, ForeignKey("games.name", ondelete="CASCADE")
     )  # 작성할 게임의 id
     date = Column(DateTime, nullable=False)  # 기록을 작성한 일시
     during_time = Column(Integer, nullable=False)  # 게임을 한 시간
