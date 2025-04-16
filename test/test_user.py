@@ -313,7 +313,7 @@ async def test_read_not_existed_user(
 
 
 @pytest.mark.asyncio
-async def test_change_email(
+async def test_update_email(
     async_client: AsyncClient,
     login_test_user: USER_DATA,
 ):
