@@ -148,7 +148,7 @@ async def test_read_not_existed_game(
 
 
 @pytest.mark.asynico
-async def test_change_game_data(
+async def test_update_game_data(
     async_client: AsyncClient,
     create_test_game: GAME_DATA,
     login_admin_user: USER_DATA,
@@ -173,7 +173,7 @@ async def test_change_game_data(
 
 
 @pytest.mark.asynico
-async def test_change_game_data_no_permission(
+async def test_update_game_data_no_permission(
     async_client: AsyncClient,
     create_test_game: GAME_DATA,
     login_test_user: USER_DATA,
