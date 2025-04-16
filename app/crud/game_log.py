@@ -24,8 +24,8 @@ async def create_game_log_in_db(
         None
     """
     db_game_log = GameLog(
-        user_id=user.id,
-        game_id=game.id,
+        user_name=user.name,
+        game_name=game.name,
         date=datetime.now(),
         during_time=game_log_info.during_time,
         participant_num=game_log_info.participant_num,
@@ -64,13 +64,17 @@ async def get_game_log_in_db(
     elif user and game:
         results = await db.execute(
             select(GameLog).where(
-                (GameLog.user_id == user.id) & (GameLog.game_id == game.id)
+                (GameLog.user_name == user.name) & (GameLog.game_name == game.name)
             )
         )
     elif user:
-        results = await db.execute(select(GameLog).where(GameLog.user_id == user.id))
+        results = await db.execute(
+            select(GameLog).where(GameLog.user_name == user.name)
+        )
     else:
-        results = await db.execute(select(GameLog).where(GameLog.game_id == game.id))
+        results = await db.execute(
+            select(GameLog).where(GameLog.game_name == game.name)
+        )
 
     return results.scalars().all()
 

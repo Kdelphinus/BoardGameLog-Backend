@@ -5,8 +5,8 @@ from app.core.exceptions import NotAcceptableException
 
 class GameLog(BaseModel):
     id: int
-    user_id: int
-    game_id: int
+    user_name: str
+    game_name: str
     during_time: int
     participant_num: int
     subject: str
@@ -38,9 +38,9 @@ class GameLogCreate(BaseModel):
 
 
 class GameLogUpdate(BaseModel):
-    game_id: int
-    during_time: int
-    participant_num: int
-    subject: str
+    game_name: str = None
+    during_time: int = None
+    participant_num: int = None
+    subject: str = None
     content: str | None = None
     picture: str | None = None
