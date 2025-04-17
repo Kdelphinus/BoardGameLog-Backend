@@ -269,3 +269,5 @@ cython_debug/
 
 # db 보호를 위해
 /alembic.ini
+
+.env.local
