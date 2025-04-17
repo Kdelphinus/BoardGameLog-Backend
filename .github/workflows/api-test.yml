@@ -22,9 +22,7 @@ jobs:
           --health-retries 5
 
     env:
-      REDIS_HOST: localhost
-      REDIS_PORT: 6379
-      # 필요 시 다른 환경변수도 추가 가능
+      TEST_ENV: True
 
     steps:
       - name: Checkout repository
