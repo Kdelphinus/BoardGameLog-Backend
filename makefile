@@ -1,21 +1,25 @@
 all:
-	docker-compose -f ./docker-compose.yml up --build --detach
+	docker-compose up --build
 
-debug:
-	docker-compose -f ./docker-compose.yml up --build #--detach
+detach:
+	docker-compose up --build --detach
+
+test:
+	docker exec backend pytest -s
 
 down:
-	docker-compose -f ./docker-compose.yml down
+	docker-compose down
 
 re: down
-	docker-compose -f ./docker-compose.yml up --build --detach
+	docker-compose up --build --detach
 
 clean: down
-	docker system prune -a
+	docker-compose down --remove-orphans
 
 fclean:
-	docker-compose -f ./docker-compose.yml down -v
-	docker system prune --all --force --volumes
+	docker-compose down --volumes --remove-orphans
+	docker volume prune --force
+	docker network prune --force
+	docker system prune --force
 
-
-.PHONY: all down re clean debug test
+.PHONY: all detach test down re clean fclean
