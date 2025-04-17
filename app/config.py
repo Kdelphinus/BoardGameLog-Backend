@@ -2,7 +2,12 @@ import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from dotenv import load_dotenv
 
-ENV_FILE = ".env" if os.getenv("DOCKER_ENV", "").lower() == "true" else ".env.local"
+if os.getenv("TEST_ENV", "").lower() == "true":
+    ENV_FILE = ".env.test"
+elif os.getenv("DOCKER_ENV", "").lower() == "true":
+    ENV_FILE = ".env"
+else:
+    ENV_FILE = ".env.local"
 load_dotenv(dotenv_path=ENV_FILE)
 
 

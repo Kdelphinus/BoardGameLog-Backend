@@ -22,9 +22,7 @@ jobs:
           --health-retries 5
 
     env:
-      REDIS_HOST: localhost
-      REDIS_PORT: 6379
-      REDIS_DATABASE: 0
+      PYTHON_ENV: test
 
     steps:
       - name: Checkout repository
