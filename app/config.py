@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     # test
     TEST_DATABASE_URL: str
 
+    # Frontend
+    FRONTEND_URL: str
+
     model_config = SettingsConfigDict(
         env_file=".env",  # .env 파일 경로 지정
         env_file_encoding="utf-8",  # 환경 변수 파일 값을 우선
@@ -65,4 +68,5 @@ settings = Settings(
     ADMIN_MAIL=os.getenv("ADMIN_MAIL"),
     ADMIN_PWD=os.getenv("ADMIN_PWD"),
     TEST_DATABASE_URL=os.getenv("TEST_DATABASE_URL"),
+    FRONTEND_URL=os.getenv("FRONTEND_URL"),
 )
