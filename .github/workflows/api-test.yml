@@ -24,7 +24,7 @@ jobs:
     env:
       REDIS_HOST: localhost
       REDIS_PORT: 6379
-      # 필요 시 다른 환경변수도 추가 가능
+      REDIS_DATABASE: 0
 
     steps:
       - name: Checkout repository
