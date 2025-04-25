@@ -32,7 +32,11 @@ async def create_user_in_db(db: AsyncSession, user_info: UserCreate) -> None:
 
 
 async def get_user_in_db(
-    db: AsyncSession, name: str = None, email: EmailStr = None, is_deleted: bool = False
+    db: AsyncSession,
+    name: str = None,
+    email: EmailStr = None,
+    is_deleted: bool = False,
+    is_all: bool = False,
 ) -> User | Sequence[User]:
     """
     db에 있는 사용자 정보를 가져오는 함수
@@ -41,6 +45,7 @@ async def get_user_in_db(
         name: 가져올 사용자의 이름
         email: 가져올 사용자의 이메일
         is_deleted: 삭제된 사용자를 가져올 것인지 유무
+        is_all: 활성화, 비활성화 된 사용자들을 모두 가져올 것인기 유무
 
     Returns:
         1) name 값이 있을 때: 특정 사용자 정보 반환
@@ -48,24 +53,39 @@ async def get_user_in_db(
         3) name, email 값이 모두 없을 때: 모든 사용자 정보 반환
     """
     if not name and not email:
-        results = await db.execute(select(User).where(User.is_deleted == is_deleted))
+        query = (
+            select(User)
+            if is_all
+            else select(User).where(User.is_deleted == is_deleted)
+        )
+        results = await db.execute(query)
         return results.scalars().all()
     elif name and email:
-        result = await db.execute(
-            select(User).where(
+        query = (
+            select(User).where((User.name == name) | (User.email == email))
+            if is_all
+            else select(User).where(
                 ((User.name == name) | (User.email == email))
                 & (User.is_deleted == is_deleted)
             )
         )
     elif name:
-        result = await db.execute(
-            select(User).where((User.name == name) & (User.is_deleted == is_deleted))
+        query = (
+            select(User).where(User.name == name)
+            if is_all
+            else select(User).where(
+                (User.name == name) & (User.is_deleted == is_deleted)
+            )
         )
-
     else:
-        result = await db.execute(
-            select(User).where((User.email == email) & (User.is_deleted == is_deleted))
+        query = (
+            select(User).where(User.email == email)
+            if is_all
+            else select(User).where(
+                (User.email == email) & (User.is_deleted == is_deleted)
+            )
         )
+    result = await db.execute(query)
     return result.scalars().first()
 
 
