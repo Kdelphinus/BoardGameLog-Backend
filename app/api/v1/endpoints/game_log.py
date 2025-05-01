@@ -87,6 +87,20 @@ async def get_game_log_by_user_and_game(
     return await get_game_log_in_db(db, user=current_user, game=game)
 
 
+@router.get("/list/log/{log_id}", status_code=status.HTTP_200_OK)
+async def get_game_log_by_id(log_id: str, db: AsyncSession = Depends(get_db)):
+    """
+    하나의 게임 기록을 반환하는 API
+    Args:
+        log_id: 가져오고자 하는 기록 id
+        db: AsyncSession
+
+    Returns:
+        가져오고자 하는 게임 기록
+    """
+    return await is_existing_game_log(db, int(log_id))
+
+
 @router.get("/list/{game_name}", status_code=status.HTTP_200_OK)
 async def get_game_log_by_game(game_name: str, db: AsyncSession = Depends(get_db)):
     """
