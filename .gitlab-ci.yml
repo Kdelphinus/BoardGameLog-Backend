@@ -4,6 +4,7 @@ variables:
   REDIS_HOST: redis
   REDIS_PORT: 6379
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip-cache"
+  PYTHONUNBUFFERED: "1"  # 로그 버퍼링 비활성화로 실시간 로그 확인 가능
 
 # 캐시 설정
 cache:
@@ -19,16 +20,34 @@ test:
   services:
     - name: redis:7
       alias: redis
+      command: ["redis-server", "--bind", "0.0.0.0"]
   before_script:
     - python -m venv .venv
-    - source .venv/bin/activate
+    - source .venv/bin/activate || . .venv/bin/activate
     - pip install --upgrade pip
-    - pip install -r requirements.txt
-    - cp .env.test .env
+    - pip install --no-cache-dir -r requirements.txt
+    # .env.test 파일이 없는 경우 대비
+    - if [ -f .env.test ]; then cp .env.test .env; else echo "Creating default .env file"; echo "REDIS_HOST=redis" >> .env; echo "REDIS_PORT=6379" >> .env; fi
+    # CI 환경 디버깅 정보 출력
+    - echo "Python version:"
+    - python --version
+    - echo "Pip version:"
+    - pip --version
+    - echo "Current directory structure:"
+    - ls -la
   script:
-    - source .venv/bin/activate
-    - pytest
+    - source .venv/bin/activate || . .venv/bin/activate
+    - python -m pytest -v  # 상세 출력 모드로 테스트 실행
+  after_script:
+    - echo "Test logs and artifacts:"
+    - ls -la
   only:
     - main
     - develop
     - merge_requests
+  artifacts:
+    when: always  # 성공 또는 실패 시 항상 아티팩트 저장
+    paths:
+      - pytest.log
+      - .pytest_cache/
+    expire_in: 1 week
