@@ -1,0 +1,34 @@
+image: python:3.12
+
+variables:
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip-cache"
+
+# 캐시 설정
+cache:
+  paths:
+    - .pip-cache/
+    - .venv/
+
+stages:
+  - test
+
+test:
+  stage: test
+  services:
+    - name: redis:7
+      alias: redis
+  before_script:
+    - python -m venv .venv
+    - source .venv/bin/activate
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
+    - cp .env.test .env
+  script:
+    - source .venv/bin/activate
+    - pytest
+  only:
+    - main
+    - develop
+    - merge_requests
