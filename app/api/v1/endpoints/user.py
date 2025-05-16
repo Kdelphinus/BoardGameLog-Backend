@@ -59,7 +59,7 @@ async def create_user(
     """
     if _user_info.name.lower() in ["all", "deactivate", "admin"]:
         raise NotAcceptableException(detail="Could not use this name")
-    await is_not_existing_user(db=db, name=_user_info.name, email=_user_info.email)
+    await is_not_existing_user(db=db, name=_user_info.name, email=_user_info.email, is_all=True)
     await create_user_in_db(db=db, user_info=_user_info)
 
 
@@ -173,7 +173,6 @@ async def get_current_user(
     return current_user
 
 
-# TODO 관리자만 가능한지 테스트 추가해야 함
 @router.get(
     "/list/deactivate",
     status_code=status.HTTP_200_OK,
@@ -309,7 +308,6 @@ async def confirm_restore_user(
     return await restore_user(token=data.token, db=db)
 
 
-# TODO 관리자만 가능한지 테스트 해야 함
 @router.delete("/delete", status_code=status.HTTP_200_OK)
 async def hard_delete_user(
     db: AsyncSession = Depends(get_db), admin_user: User = Depends(get_admin_user_in_db)

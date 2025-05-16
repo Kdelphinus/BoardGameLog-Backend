@@ -25,7 +25,7 @@ async def is_existing_user(
 
 
 async def is_not_existing_user(
-    db: AsyncSession, name: str = None, email: str = None
+    db: AsyncSession, name: str = None, email: str = None, is_all: bool = False
 ) -> None:
     """
     db에 없는 사용자인지 확인하는 함수
@@ -33,10 +33,11 @@ async def is_not_existing_user(
         db: AsyncSession
         name: 확인할 사용자의 이름
         email: 확인할 사용자의 이메일
+        is_all: 활성, 비활성 사용자 모두 가져올 지 유무
 
     Returns:
 
     """
-    user = await get_user_in_db(db, name=name, email=email)
+    user = await get_user_in_db(db, name=name, email=email, is_all=is_all)
     if user:
         raise ConflictException(f"User [{name}] already exists.")

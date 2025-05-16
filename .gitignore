@@ -271,3 +271,4 @@ cython_debug/
 /alembic.ini
 
 .env.local
+test/test.db
