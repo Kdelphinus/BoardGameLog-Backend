@@ -1,51 +1,28 @@
-name: Run Tests with Redis and .env
+# .gitlab-ci.yml
 
-on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
+stages:
+  - test
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
+variables:
+  REDIS_HOST: redis  # GitLab 내부 서비스 DNS alias
+  REDIS_PORT: 6379
+  VENV_PATH: .venv
 
-    services:
-      redis:
-        image: redis:7
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+test:
+  stage: test
+  image: python:3.12
 
-    env:
-      REDIS_HOST: localhost
-      REDIS_PORT: 6379
-      # 필요 시 다른 환경변수도 추가 가능
+  services:
+    - name: redis:7
+      alias: redis
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+  before_script:
+    - python -m venv $VENV_PATH
+    - source $VENV_PATH/bin/activate
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
+    - cp .env.test .env
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.12"
-
-      - name: Install dependencies
-        run: |
-          python -m venv .venv
-          source .venv/bin/activate
-          pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Copy .env.test
-        run: cp .env.test .env
-
-      - name: Run Tests
-        run: |
-          source .venv/bin/activate
-          pytest
+  script:
+    - source $VENV_PATH/bin/activate
+    - pytest
