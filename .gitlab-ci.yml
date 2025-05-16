@@ -1,0 +1,27 @@
+stages:
+  - test
+
+variables:
+  REDIS_HOST: redis  # GitLab 내부 서비스 DNS alias
+  REDIS_PORT: 6379
+  VENV_PATH: .
+  TEST_ENV: True
+
+test:
+  stage: test
+  image: python:3.12
+
+  services:
+    - name: redis:7
+      alias: redis
+
+  before_script:
+    - python -m venv $VENV_PATH
+    - source $VENV_PATH/bin/activate
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
+    - cp .env.test .env
+
+  script:
+    - source $VENV_PATH/bin/activate
+    - pytest test/

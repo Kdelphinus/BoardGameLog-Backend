@@ -2,7 +2,14 @@ import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from dotenv import load_dotenv
 
-load_dotenv()
+if (
+    os.getenv("DOCKER_ENV", "").lower() == "true"
+    or os.getenv("TEST_ENV", "").lower() == "true"
+):
+    ENV_FILE = ".env"
+else:
+    ENV_FILE = ".env.local"
+load_dotenv(dotenv_path=ENV_FILE)
 
 
 class Settings(BaseSettings):
@@ -35,6 +42,9 @@ class Settings(BaseSettings):
     # test
     TEST_DATABASE_URL: str
 
+    # Frontend
+    FRONTEND_URL: str
+
     model_config = SettingsConfigDict(
         env_file=".env",  # .env 파일 경로 지정
         env_file_encoding="utf-8",  # 환경 변수 파일 값을 우선
@@ -58,4 +68,5 @@ settings = Settings(
     ADMIN_MAIL=os.getenv("ADMIN_MAIL"),
     ADMIN_PWD=os.getenv("ADMIN_PWD"),
     TEST_DATABASE_URL=os.getenv("TEST_DATABASE_URL"),
+    FRONTEND_URL=os.getenv("FRONTEND_URL"),
 )

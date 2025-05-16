@@ -7,7 +7,7 @@ from app.api.v1.router import api_router
 app = FastAPI()
 
 # CORS 해결
-origins = [f"http://{settings.BASE_IP}"]
+origins = [f"http://{settings.BASE_IP}", settings.FRONTEND_URL]
 
 app.add_middleware(
     CORSMiddleware,

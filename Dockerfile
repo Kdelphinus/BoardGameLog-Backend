@@ -1,22 +1,26 @@
-FROM python:3.11-slim
+FROM python:3.12-slim
 
-# 시스템 의존성 설치
+# 필수 패키지 설치
 RUN apt-get update && apt-get install -y \
+    netcat-openbsd \
+    gcc \
     build-essential \
     libpq-dev \
+    libffi-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
+# 작업 디렉토리 설정
 WORKDIR /app
 
-# 의존성 파일 복사
-COPY ./requirements.txt /app/requirements.txt
+# 종속성 복사 및 설치
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# 의존성 설치
-RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
+# 소스 복사
+COPY . .
 
-# entrypoint.sh 복사 및 실행 권한 부여
-COPY ./entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-# 애플리케이션 실행
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
