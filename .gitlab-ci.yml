@@ -19,8 +19,8 @@ test:
     - source $VENV_PATH/bin/activate
     - pip install --upgrade pip
     - pip install -r requirements.txt
-    - cp .env.test .env
 
   script:
+    - cp .env.test .env
     - source $VENV_PATH/bin/activate
     - pytest
