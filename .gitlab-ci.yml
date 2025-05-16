@@ -24,4 +24,4 @@ test:
 
   script:
     - source $VENV_PATH/bin/activate
-    - pytest
+    - pytest test/
