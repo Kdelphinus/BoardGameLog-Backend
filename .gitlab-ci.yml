@@ -1,49 +1,51 @@
-image: python:3.12-slim
+name: Run Tests with Redis and .env
 
-variables:
-  REDIS_HOST: redis
-  REDIS_PORT: 6379
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip-cache"
-  PYTHONUNBUFFERED: "1"
-  FF_USE_FASTZIP: "true"  # 더 빠른 zip 사용
-  ARTIFACT_COMPRESSION_LEVEL: "fast"  # 빠른 압축 사용
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
 
-cache:
-  key: ${CI_COMMIT_REF_SLUG}
-  paths:
-    - .pip-cache/
-    - .venv/
-  policy: pull  # 캐시 읽기만 하도록 변경
+jobs:
+  test:
+    runs-on: ubuntu-latest
 
-stages:
-  - test
+    services:
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
-test:
-  stage: test
-  services:
-    - name: redis:7-alpine
-      alias: redis
-      command: ["redis-server", "--bind", "0.0.0.0"]
-  before_script:
-    # 캐시된 venv가 있는지 확인
-    - if [ ! -d ".venv" ]; then python -m venv .venv; fi
-    - source .venv/bin/activate || . .venv/bin/activate
-    # requirements.txt가 변경된 경우에만 패키지 설치
-    - if [ -f requirements-test.txt ]; then 
-        pip install --no-cache-dir -r requirements-test.txt; 
-      elif [ -f requirements.txt ]; then 
-        pip install --no-cache-dir -r requirements.txt; 
-      fi
-    - if [ -f .env.test ]; then cp .env.test .env; else echo "REDIS_HOST=redis" > .env && echo "REDIS_PORT=6379" >> .env; fi
-  script:
-    - source .venv/bin/activate || . .venv/bin/activate
-    - python -m pytest -v -xvs --no-header --no-summary  # 테스트 출력 감소
-  only:
-    - main
-    - develop
-    - merge_requests
-  artifacts:
-    when: on_failure
-    paths:
-      - pytest.log
-    expire_in: 1 hour  # 보존 기간 더 축소
+    env:
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      # 필요 시 다른 환경변수도 추가 가능
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Copy .env.test
+        run: cp .env.test .env
+
+      - name: Run Tests
+        run: |
+          source .venv/bin/activate
+          pytest
