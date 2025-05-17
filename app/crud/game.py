@@ -23,6 +23,7 @@ async def create_game_in_db(db: AsyncSession, game_info: GameCreate) -> None:
         weight=game_info.weight,
         max_possible_num=game_info.max_possible_num,
         min_possible_num=game_info.min_possible_num,
+        cover_image=game_info.cover_image,
     )
     db.add(db_game)
     await db.commit()

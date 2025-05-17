@@ -150,12 +150,14 @@ def game_data_list() -> GAME_DATA_LIST:
             "weight": 1.97,
             "min_possible_num": 1,
             "max_possible_num": 4,
+            "cover_image": "https://example.com/cascadia.jpg",
         },
         {
             "name": "아크노바",
             "weight": 3.97,
             "min_possible_num": 1,
             "max_possible_num": 4,
+            "cover_image": "https://example.com/arknova.jpg",
         },
     ]
 
@@ -329,7 +331,7 @@ async def create_test_game(
     response = await async_client.post(
         f"{GAME_API_URL}/create",
         json=game_data_list[0],
-        headers={f"Authorization": f"Bearer {login_admin_user["access_token"]}"},
+        headers={f"Authorization": f"Bearer {login_admin_user['access_token']}"},
     )
     return game_data_list[0]
 
@@ -354,7 +356,7 @@ async def create_test_all_game(
         await async_client.post(
             f"{GAME_API_URL}/create",
             json=tmp_game_data,
-            headers={f"Authorization": f"Bearer {login_admin_user["access_token"]}"},
+            headers={f"Authorization": f"Bearer {login_admin_user['access_token']}"},
         )
     return game_data_list
 
@@ -383,11 +385,11 @@ async def create_test_all_game_log(
         await async_client.post(
             f"{GAME_LOG_API_URL}/create",
             json=tmp_game_log_data,
-            headers={f"Authorization": f"Bearer {login_test_user["access_token"]}"},
+            headers={f"Authorization": f"Bearer {login_test_user['access_token']}"},
         )
         await async_client.post(
             f"{GAME_LOG_API_URL}/create",
             json=tmp_game_log_data,
-            headers={f"Authorization": f"Bearer {login_admin_user["access_token"]}"},
+            headers={f"Authorization": f"Bearer {login_admin_user['access_token']}"},
         )
     return login_test_user, game_log_data_list

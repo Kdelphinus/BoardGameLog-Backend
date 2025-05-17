@@ -1,5 +1,6 @@
 from pydantic import BaseModel, field_validator
 from pydantic_core.core_schema import ValidationInfo
+from typing import Optional
 
 
 class Game(BaseModel):
@@ -8,6 +9,7 @@ class Game(BaseModel):
     weight: float
     max_possible_num: int
     min_possible_num: int
+    cover_image: Optional[str] = None
 
 
 class GameResponse(BaseModel):
@@ -15,6 +17,7 @@ class GameResponse(BaseModel):
     weight: float
     max_possible_num: int
     min_possible_num: int
+    cover_image: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -26,6 +29,7 @@ class GameCreate(BaseModel):
     weight: float
     max_possible_num: int
     min_possible_num: int
+    cover_image: Optional[str] = None
 
     @field_validator("name")
     def not_empty(cls, v: str) -> str:
@@ -53,3 +57,4 @@ class GameUpdate(BaseModel):
     weight: float = None
     max_possible_num: int = None
     min_possible_num: int = None
+    cover_image: Optional[str] = None

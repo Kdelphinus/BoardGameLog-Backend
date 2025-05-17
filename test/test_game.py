@@ -21,7 +21,7 @@ async def test_create_game(
     response = await async_client.post(
         f"{GAME_API_URL}/create",
         json=game_data_list[0],
-        headers={f"Authorization": f"Bearer {login_admin_user["access_token"]}"},
+        headers={f"Authorization": f"Bearer {login_admin_user['access_token']}"},
     )
     assert response.status_code == status.HTTP_201_CREATED
 
@@ -36,7 +36,7 @@ async def test_create_game_duplicate_name(
     response = await async_client.post(
         f"{GAME_API_URL}/create",
         json=create_test_game,
-        headers={f"Authorization": f"Bearer {login_admin_user["access_token"]}"},
+        headers={f"Authorization": f"Bearer {login_admin_user['access_token']}"},
     )
 
     assert response.status_code == status.HTTP_409_CONFLICT
@@ -52,7 +52,7 @@ async def test_create_game_no_permission(
     response = await async_client.post(
         f"{GAME_API_URL}/create",
         json=game_data_list[0],
-        headers={f"Authorization": f"Bearer {login_test_user["access_token"]}"},
+        headers={f"Authorization": f"Bearer {login_test_user['access_token']}"},
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
@@ -68,7 +68,7 @@ async def test_create_game_invalid_data(
     response = await async_client.post(
         f"{GAME_API_URL}/create",
         json=create_test_game,
-        headers={f"Authorization": f"Bearer {login_admin_user["access_token"]}"},
+        headers={f"Authorization": f"Bearer {login_admin_user['access_token']}"},
     )
 
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
@@ -78,7 +78,7 @@ async def test_create_game_invalid_data(
     response = await async_client.post(
         f"{GAME_API_URL}/create",
         json=create_test_game,
-        headers={f"Authorization": f"Bearer {login_admin_user["access_token"]}"},
+        headers={f"Authorization": f"Bearer {login_admin_user['access_token']}"},
     )
 
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
@@ -88,7 +88,7 @@ async def test_create_game_invalid_data(
     response = await async_client.post(
         f"{GAME_API_URL}/create",
         json=create_test_game,
-        headers={f"Authorization": f"Bearer {login_admin_user["access_token"]}"},
+        headers={f"Authorization": f"Bearer {login_admin_user['access_token']}"},
     )
 
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
@@ -98,7 +98,7 @@ async def test_create_game_invalid_data(
     response = await async_client.post(
         f"{GAME_API_URL}/create",
         json=create_test_game,
-        headers={f"Authorization": f"Bearer {login_admin_user["access_token"]}"},
+        headers={f"Authorization": f"Bearer {login_admin_user['access_token']}"},
     )
 
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
@@ -124,7 +124,7 @@ async def test_read_game(
 ):
     """특정 게임의 정보를 불러오는 테스트"""
     game_data = game_data_list[0]
-    response = await async_client.get(f"{GAME_API_URL}/list/{game_data["name"]}")
+    response = await async_client.get(f"{GAME_API_URL}/list/{game_data['name']}")
     status_code = response.status_code
     response = response.json()
 
@@ -133,6 +133,7 @@ async def test_read_game(
     assert response["weight"] == game_data["weight"]
     assert response["min_possible_num"] == game_data["min_possible_num"]
     assert response["max_possible_num"] == game_data["max_possible_num"]
+    assert response["cover_image"] == game_data["cover_image"]
 
 
 @pytest.mark.asynico
@@ -143,7 +144,7 @@ async def test_read_not_existed_game(
 ):
     """없는 게임 목록을 불러오는 테스트"""
     game_data = game_data_list[0]
-    response = await async_client.get(f"{GAME_API_URL}/list/{game_data["name"] + "a"}")
+    response = await async_client.get(f"{GAME_API_URL}/list/{game_data['name'] + 'a'}")
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
@@ -155,12 +156,13 @@ async def test_update_game_data(
 ):
     """게임 정보를 수정하는 테스트"""
     response = await async_client.patch(
-        f"{GAME_API_URL}/patch/{create_test_game["name"]}",
-        headers={f"Authorization": f"Bearer {login_admin_user["access_token"]}"},
+        f"{GAME_API_URL}/patch/{create_test_game['name']}",
+        headers={f"Authorization": f"Bearer {login_admin_user['access_token']}"},
         json={
             "weight": create_test_game["weight"] + 1,
             "min_possible_num": 2,
             "max_possible_num": 6,
+            "cover_image": "https://example.com/updated_image.jpg",
         },
     )
     status_code = response.status_code
@@ -170,6 +172,7 @@ async def test_update_game_data(
     assert create_test_game["weight"] + 1 == response["weight"]
     assert 2 == response["min_possible_num"]
     assert 6 == response["max_possible_num"]
+    assert "https://example.com/updated_image.jpg" == response["cover_image"]
 
 
 @pytest.mark.asynico
@@ -180,12 +183,13 @@ async def test_update_game_data_no_permission(
 ):
     """게임 정보를 수정 권한이 없을 때 수정하는 테스트"""
     response = await async_client.patch(
-        f"{GAME_API_URL}/patch/{create_test_game["name"]}",
-        headers={f"Authorization": f"Bearer {login_test_user["access_token"]}"},
+        f"{GAME_API_URL}/patch/{create_test_game['name']}",
+        headers={f"Authorization": f"Bearer {login_test_user['access_token']}"},
         json={
             "weight": create_test_game["weight"] + 1,
             "min_possible_num": 2,
             "max_possible_num": 6,
+            "cover_image": "https://example.com/updated_image.jpg",
         },
     )
     status_code = response.status_code
@@ -202,8 +206,8 @@ async def test_cannot_update_nonexistent_field(
 ):
     """없는 속성을 바꾸는 테스트"""
     response = await async_client.patch(
-        f"{GAME_API_URL}/patch/{create_test_game["name"]}",
-        headers={f"Authorization": f"Bearer {login_admin_user["access_token"]}"},
+        f"{GAME_API_URL}/patch/{create_test_game['name']}",
+        headers={f"Authorization": f"Bearer {login_admin_user['access_token']}"},
         json={"no existed attribute": "change_user"},
     )
 
@@ -220,12 +224,37 @@ async def test_update_with_identical_data(
 ):
     """기존과 동일한 데이터로 바꾸는 테스트"""
     response = await async_client.patch(
-        f"{GAME_API_URL}/patch/{create_test_game["name"]}",
-        headers={f"Authorization": f"Bearer {login_admin_user["access_token"]}"},
+        f"{GAME_API_URL}/patch/{create_test_game['name']}",
+        headers={f"Authorization": f"Bearer {login_admin_user['access_token']}"},
     )
     status_code = response.status_code
 
     assert status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+
+@pytest.mark.asyncio
+async def test_update_cover_image(
+    async_client: AsyncClient,
+    create_test_game: GAME_DATA,
+    login_admin_user: USER_DATA,
+):
+    """게임 표지 이미지만 수정하는 테스트"""
+    response = await async_client.patch(
+        f"{GAME_API_URL}/patch/{create_test_game['name']}",
+        headers={f"Authorization": f"Bearer {login_admin_user['access_token']}"},
+        json={
+            "cover_image": "https://example.com/new_cover.jpg",
+        },
+    )
+    status_code = response.status_code
+    response = response.json()
+
+    assert status_code == status.HTTP_200_OK
+    assert response["name"] == create_test_game["name"]
+    assert response["weight"] == create_test_game["weight"]
+    assert response["min_possible_num"] == create_test_game["min_possible_num"]
+    assert response["max_possible_num"] == create_test_game["max_possible_num"]
+    assert response["cover_image"] == "https://example.com/new_cover.jpg"
 
 
 @pytest.mark.asyncio
@@ -236,8 +265,8 @@ async def test_delete_game(
 ):
     """게임 정보를 삭제하는 테스트"""
     response = await async_client.delete(
-        f"{GAME_API_URL}/delete/{create_test_game["name"]}",
-        headers={f"Authorization": f"Bearer {login_admin_user["access_token"]}"},
+        f"{GAME_API_URL}/delete/{create_test_game['name']}",
+        headers={f"Authorization": f"Bearer {login_admin_user['access_token']}"},
     )
     status_code = response.status_code
     assert status_code == status.HTTP_200_OK
@@ -254,8 +283,8 @@ async def test_delete_game_not_existed_game(
 ):
     """없는 게임 정보를 삭제하는 테스트"""
     response = await async_client.delete(
-        f"{GAME_API_URL}/delete/{create_test_game["name"]} + a",
-        headers={f"Authorization": f"Bearer {login_admin_user["access_token"]}"},
+        f"{GAME_API_URL}/delete/{create_test_game['name']} + a",
+        headers={f"Authorization": f"Bearer {login_admin_user['access_token']}"},
     )
     status_code = response.status_code
     assert status_code == status.HTTP_404_NOT_FOUND
@@ -269,8 +298,8 @@ async def test_delete_game_no_permission(
 ):
     """게임 정보를 삭제하는 권한이 없을 때 테스트"""
     response = await async_client.delete(
-        f"{GAME_API_URL}/delete/{create_test_game["name"]}",
-        headers={f"Authorization": f"Bearer {login_test_user["access_token"]}"},
+        f"{GAME_API_URL}/delete/{create_test_game['name']}",
+        headers={f"Authorization": f"Bearer {login_test_user['access_token']}"},
     )
     status_code = response.status_code
     assert status_code == status.HTTP_403_FORBIDDEN

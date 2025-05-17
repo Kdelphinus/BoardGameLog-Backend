@@ -12,5 +12,6 @@ class Game(Base):
     weight = Column(Float, nullable=False)  # 보드 게임의 weight
     min_possible_num = Column(Integer, nullable=False)  # 게임할 수 있는 최소 인원
     max_possible_num = Column(Integer, nullable=False)  # 게임할 수 있는 최대 인원
+    cover_image = Column(String, nullable=True)  # 게임 표지 이미지 URL
 
     logs = relationship("GameLog", back_populates="game")
