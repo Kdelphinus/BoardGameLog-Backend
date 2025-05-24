@@ -24,7 +24,6 @@ async def create_game_log_in_db(
     db_game_log = GameLog(
         user_name=user.name,
         game_name=game.name,
-        date=datetime.now(),
         during_time=game_log_info.during_time,
         participant_num=game_log_info.participant_num,
         subject=game_log_info.subject,
@@ -92,8 +91,6 @@ async def update_game_log_in_db(
     """
     for key, value in update_data.items():
         setattr(game_log, key, value)
-
-    setattr(game_log, "date", datetime.now())
 
     await db.commit()
     await db.refresh(game_log)
