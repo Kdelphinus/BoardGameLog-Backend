@@ -11,4 +11,5 @@ python tools/create_admin.py
 
 # 3. FastAPI 서버 실행
 echo "🚀 FastAPI 서버 시작 중..."
-exec uvicorn app.main:app --host 0.0.0.0 --port 8000
+# TODO --reload는 코드 변경 시, 바로 적용 되도록 하는 옵션
+exec uvicorn --reload app.main:app --host 0.0.0.0 --port 8000
