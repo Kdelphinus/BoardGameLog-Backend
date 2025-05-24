@@ -7,6 +7,9 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # 명시적 선언
 from app.models.user import User
+from app.models.game import Game
+from app.models.game_log import GameLog
+from app.models.game_log_like import GameLogLike
 from app.config import settings
 from app.api.dependencies import get_db
 from app.crud.user import get_user_in_db

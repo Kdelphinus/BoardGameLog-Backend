@@ -6,6 +6,7 @@ from sqlalchemy import pool
 
 # 명시적으로 호출하기
 from app.db.database import Base
+from app.models import user, game, game_log, game_log_like
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
