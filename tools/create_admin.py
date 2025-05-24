@@ -1,11 +1,11 @@
-import sys, os, asyncio
+import asyncio
+import os
+import sys
 
 # 프로젝트 루트를 PYTHONPATH에 추가
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # 명시적 선언
-from app.models.game_log import GameLog
-from app.models.game import Game
 from app.models.user import User
 from app.config import settings
 from app.api.dependencies import get_db

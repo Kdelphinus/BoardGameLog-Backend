@@ -1,13 +1,11 @@
 from logging.config import fileConfig
 
+from alembic import context
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
-from alembic import context
-
 # 명시적으로 호출하기
 from app.db.database import Base
-from app.models import user, game, game_log
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

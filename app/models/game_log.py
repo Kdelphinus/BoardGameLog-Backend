@@ -1,7 +1,21 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text
+from fastapi import Depends
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    ForeignKey,
+    DateTime,
+    Text,
+    select,
+    func,
+    and_,
+)
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import relationship
 
+from app.api.dependencies import get_db
 from app.db.database import Base
+from app.models.game_log_like import GameLogLike
 
 
 class GameLog(Base):
@@ -20,6 +34,16 @@ class GameLog(Base):
     subject = Column(String, nullable=False)  # 제목
     content = Column(Text, nullable=True)  # 내용
     picture = Column(String, nullable=True)  # 사진
+    like_num = Column(Integer, default=0)  # 좋아요 수
 
     user = relationship("User", back_populates="played_the_games")
     game = relationship("Game", back_populates="logs")
+    likes = relationship("GameLogLike", back_populates="game_log")
+
+    async def update_like_num(self, db: AsyncSession = Depends(get_db)):
+        query = select(func.count()).where(
+            and_(GameLogLike.game_log_id == self.id, GameLogLike.flag == True)
+        )
+        result = await db.execute(query)
+        self.like_num = result.scalar() or 0
+        await db.commit()

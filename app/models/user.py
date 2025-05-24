@@ -18,3 +18,4 @@ class User(Base):
     deleted_at = Column(DateTime, nullable=True)  # 탈퇴한 날짜
 
     played_the_games = relationship("GameLog", back_populates="user")
+    game_log_likes = relationship("GameLogLike", back_populates="user")
