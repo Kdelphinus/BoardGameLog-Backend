@@ -1,17 +1,17 @@
-import pytest
 from typing import Any
+
+import pytest
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.main import app
-from app.db.database import Base
-from app.config import settings
 from app.api.dependencies import get_db
-from app.models.user import User
+from app.config import settings
 from app.core.security import pwd_context
-
+from app.db.database import Base
+from app.main import app
+from app.models.user import User
 
 USER_DATA = dict[str, str]
 USER_DATA_LIST = list[USER_DATA]
@@ -24,6 +24,7 @@ BASIC_API_URL = f"/api/{settings.API_VERSION}"
 USER_API_URL = f"{BASIC_API_URL}/users"
 GAME_API_URL = f"{BASIC_API_URL}/games"
 GAME_LOG_API_URL = f"{BASIC_API_URL}/game_logs"
+GAME_LOG_LIKE_API_URL = f"{BASIC_API_URL}/game_log_like"
 
 
 @pytest.fixture(scope="function")
