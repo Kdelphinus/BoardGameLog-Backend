@@ -9,13 +9,14 @@ class GameLog(BaseModel):
     id: int
     user_name: str
     game_name: str
-    date: datetime
     during_time: int
+    created_at: datetime
+    updated_at: datetime
     participant_num: int
     subject: str
     content: str | None = None
     picture: str | None = None
-    like_num: int = 0
+    like_num: int
 
     class Config:
         from_attributes = True
@@ -48,8 +49,8 @@ class GameLogUpdate(BaseModel):
     game_name: str = None
     during_time: int = None
     participant_num: int = None
-    date: datetime = None
+    created_at: datetime = None
+    updated_at: datetime = None
     subject: str = None
     content: str | None = None
     picture: str | None = None
-    like_num: int = None
