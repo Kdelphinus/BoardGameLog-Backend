@@ -1,10 +1,11 @@
+from typing import List
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from app.core.exceptions import NotAcceptableException, ForbiddenException
-from app.models.user import User
 from app.api.dependencies import get_db
+from app.core.exceptions import NotAcceptableException, ForbiddenException
 from app.core.security import get_current_user_in_db
 from app.crud.game_log import (
     create_game_log_in_db,
@@ -12,7 +13,8 @@ from app.crud.game_log import (
     update_game_log_in_db,
     delete_game_log_in_db,
 )
-from app.schemas.game_log import GameLogCreate, GameLogUpdate
+from app.models.user import User
+from app.schemas.game_log import GameLogCreate, GameLogUpdate, GameLog
 from app.services.game import is_existing_game
 from app.services.game_log import validate_participant_num, is_existing_game_log
 
@@ -37,7 +39,7 @@ async def create_game_log(
     await create_game_log_in_db(db, game_log_info, user=current_user, game=game)
 
 
-@router.get("/list", status_code=status.HTTP_200_OK)
+@router.get("/list", status_code=status.HTTP_200_OK, response_model=List[GameLog])
 async def get_all_game_log(db: AsyncSession = Depends(get_db)):
     """
     모든 게임 기록 반환하는 API
@@ -50,7 +52,7 @@ async def get_all_game_log(db: AsyncSession = Depends(get_db)):
     return await get_game_log_in_db(db)
 
 
-@router.get("/list/my", status_code=status.HTTP_200_OK)
+@router.get("/list/my", status_code=status.HTTP_200_OK, response_model=List[GameLog])
 async def get_game_log_by_user(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user_in_db),
@@ -67,7 +69,9 @@ async def get_game_log_by_user(
     return await get_game_log_in_db(db, user=current_user)
 
 
-@router.get("/list/my/{game_name}", status_code=status.HTTP_200_OK)
+@router.get(
+    "/list/my/{game_name}", status_code=status.HTTP_200_OK, response_model=List[GameLog]
+)
 async def get_game_log_by_user_and_game(
     game_name: str,
     db: AsyncSession = Depends(get_db),
@@ -87,7 +91,9 @@ async def get_game_log_by_user_and_game(
     return await get_game_log_in_db(db, user=current_user, game=game)
 
 
-@router.get("/list/log/{log_id}", status_code=status.HTTP_200_OK)
+@router.get(
+    "/list/log/{log_id}", status_code=status.HTTP_200_OK, response_model=GameLog
+)
 async def get_game_log_by_id(log_id: str, db: AsyncSession = Depends(get_db)):
     """
     하나의 게임 기록을 반환하는 API
@@ -101,7 +107,9 @@ async def get_game_log_by_id(log_id: str, db: AsyncSession = Depends(get_db)):
     return await is_existing_game_log(db, int(log_id))
 
 
-@router.get("/list/{game_name}", status_code=status.HTTP_200_OK)
+@router.get(
+    "/list/{game_name}", status_code=status.HTTP_200_OK, response_model=List[GameLog]
+)
 async def get_game_log_by_game(game_name: str, db: AsyncSession = Depends(get_db)):
     """
     특정 게임의 기록을 반환하는 API
@@ -116,7 +124,11 @@ async def get_game_log_by_game(game_name: str, db: AsyncSession = Depends(get_db
     return await get_game_log_in_db(db, game=game)
 
 
-@router.patch("/patch/my/{game_log_id}", status_code=status.HTTP_200_OK)
+@router.patch(
+    "/patch/my/{game_log_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=GameLogUpdate,
+)
 async def update_game_log(
     game_log_id: int,
     game_log_update: GameLogUpdate,
