@@ -1,16 +1,12 @@
-import pytest, json
-from httpx import AsyncClient
+import pytest
 from fastapi import status
+from httpx import AsyncClient
 
 from test.conftest import (
     USER_DATA,
-    GAME_DATA,
     GAME_DATA_LIST,
-    GAME_LOG_DATA,
     GAME_LOG_DATA_LIST,
     GAME_LOG_API_URL,
-    login_test_user,
-    logout_test_user,
 )
 
 
@@ -25,7 +21,7 @@ async def test_create_game_log(
     response = await async_client.post(
         f"{GAME_LOG_API_URL}/create",
         json=game_log_data_list[0],
-        headers={f"Authorization": f"Bearer {login_test_user["access_token"]}"},
+        headers={f"Authorization": f"Bearer {login_test_user['access_token']}"},
     )
     assert response.status_code == status.HTTP_201_CREATED
 
@@ -59,7 +55,7 @@ async def test_create_game_log_invalid_data(
     response = await async_client.post(
         f"{GAME_LOG_API_URL}/create",
         json=game_log_data,
-        headers={f"Authorization": f"Bearer {login_test_user["access_token"]}"},
+        headers={f"Authorization": f"Bearer {login_test_user['access_token']}"},
     )
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -69,7 +65,7 @@ async def test_create_game_log_invalid_data(
     response = await async_client.post(
         f"{GAME_LOG_API_URL}/create",
         json=game_log_data,
-        headers={f"Authorization": f"Bearer {login_test_user["access_token"]}"},
+        headers={f"Authorization": f"Bearer {login_test_user['access_token']}"},
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
@@ -79,7 +75,7 @@ async def test_create_game_log_invalid_data(
     response = await async_client.post(
         f"{GAME_LOG_API_URL}/create",
         json=game_log_data,
-        headers={f"Authorization": f"Bearer {login_test_user["access_token"]}"},
+        headers={f"Authorization": f"Bearer {login_test_user['access_token']}"},
     )
     assert response.status_code == status.HTTP_406_NOT_ACCEPTABLE
 
@@ -89,7 +85,7 @@ async def test_create_game_log_invalid_data(
     response = await async_client.post(
         f"{GAME_LOG_API_URL}/create",
         json=game_log_data,
-        headers={f"Authorization": f"Bearer {login_test_user["access_token"]}"},
+        headers={f"Authorization": f"Bearer {login_test_user['access_token']}"},
     )
     assert response.status_code == status.HTTP_406_NOT_ACCEPTABLE
 
@@ -120,7 +116,7 @@ async def test_read_my_game_log(
 
     response = await async_client.get(
         f"{GAME_LOG_API_URL}/list/my",
-        headers={f"Authorization": f"Bearer {test_user["access_token"]}"},
+        headers={f"Authorization": f"Bearer {test_user['access_token']}"},
     )
     status_code = response.status_code
     response = response.json()
@@ -151,8 +147,8 @@ async def test_read_game_log_one_game(
     game_log_data = create_test_all_game_log[1]
 
     response = await async_client.get(
-        f"{GAME_LOG_API_URL}/list/{game_log_data[0]["game_name"]}",
-        headers={f"Authorization": f"Bearer {test_user["access_token"]}"},
+        f"{GAME_LOG_API_URL}/list/{game_log_data[0]['game_name']}",
+        headers={f"Authorization": f"Bearer {test_user['access_token']}"},
     )
     status_code = response.status_code
     response = response.json()
@@ -172,8 +168,8 @@ async def test_read_game_log_not_exsited_game(
     game_log_data = create_test_all_game_log[1]
 
     response = await async_client.get(
-        f"{GAME_LOG_API_URL}/list/{game_log_data[0]["game_name"] + "a"}",
-        headers={f"Authorization": f"Bearer {test_user["access_token"]}"},
+        f"{GAME_LOG_API_URL}/list/{game_log_data[0]['game_name'] + 'a'}",
+        headers={f"Authorization": f"Bearer {test_user['access_token']}"},
     )
     status_code = response.status_code
 
@@ -189,8 +185,8 @@ async def test_read_my_game_log_one_game(
     game_log_data = create_test_all_game_log[1]
 
     response = await async_client.get(
-        f"{GAME_LOG_API_URL}/list/my/{game_log_data[0]["game_name"]}",
-        headers={f"Authorization": f"Bearer {test_user["access_token"]}"},
+        f"{GAME_LOG_API_URL}/list/my/{game_log_data[0]['game_name']}",
+        headers={f"Authorization": f"Bearer {test_user['access_token']}"},
     )
     status_code = response.status_code
     response = response.json()
@@ -206,7 +202,6 @@ async def test_update_game_log(
 ):
     """나의 게임 기록 수정"""
     test_user = create_test_all_game_log[0]
-
     response = await async_client.patch(
         f"{GAME_LOG_API_URL}/patch/my/1",
         headers={f"Authorization": f"Bearer {test_user['access_token']}"},
