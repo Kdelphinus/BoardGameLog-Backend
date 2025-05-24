@@ -1,11 +1,12 @@
-from typing import Any
 from datetime import datetime
+from typing import Any
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.models.user import User
 from app.models.game import Game
 from app.models.game_log import GameLog
+from app.models.user import User
 from app.schemas.game_log import GameLogCreate
 
 
@@ -19,9 +20,6 @@ async def create_game_log_in_db(
         game_log_info: 게임 기록에 관한 정보
         user: 게임을 기록하는 사용자
         game: 기록할 게임
-
-    Returns:
-        None
     """
     db_game_log = GameLog(
         user_name=user.name,
@@ -94,6 +92,8 @@ async def update_game_log_in_db(
     """
     for key, value in update_data.items():
         setattr(game_log, key, value)
+
+    setattr(game_log, "date", datetime.now())
 
     await db.commit()
     await db.refresh(game_log)

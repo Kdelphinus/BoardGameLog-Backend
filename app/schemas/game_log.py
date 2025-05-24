@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, field_validator
 
 from app.core.exceptions import NotAcceptableException
@@ -7,11 +9,16 @@ class GameLog(BaseModel):
     id: int
     user_name: str
     game_name: str
+    date: datetime
     during_time: int
     participant_num: int
     subject: str
     content: str | None = None
     picture: str | None = None
+    like_num: int = 0
+
+    class Config:
+        from_attributes = True
 
 
 class GameLogCreate(BaseModel):
@@ -41,6 +48,8 @@ class GameLogUpdate(BaseModel):
     game_name: str = None
     during_time: int = None
     participant_num: int = None
+    date: datetime = None
     subject: str = None
     content: str | None = None
     picture: str | None = None
+    like_num: int = None
